@@ -344,4 +344,20 @@ class WebApHelper {
       roomCourseTableQueryParser(query.data),
     );
   }
+
+  Future<Response> transcriptForAllSemestersPdfDownload() async {
+    // ResponseType.bytes
+
+    // get pdf path
+    var query = await apQuery("ag102", null);
+
+    // parse download path
+    String path = getTranscriptPdfDownloadPathParser(query.data);
+    if (path == null) {
+      throw NullThrownError;
+    }
+
+    return await dio.get("https://webap.nkust.edu.tw/nkust/ag_pro/${path}",
+        options: Options(responseType: ResponseType.bytes));
+  }
 }
