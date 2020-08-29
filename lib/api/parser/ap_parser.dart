@@ -512,6 +512,15 @@ Map<String, dynamic> roomCourseTableQueryParser(dynamic html) {
   return data;
 }
 
+String getTranscriptPdfDownloadPathParser(String html) {
+  var document = parse(html);
+
+  var query = document.getElementsByTagName("object");
+  if (query.length < 1) return null;
+
+  return query[0].attributes["data"];
+}
+
 void main() {
   new File('file.txt').readAsString().then((String contents) {
     print(apLoginParser(contents));
