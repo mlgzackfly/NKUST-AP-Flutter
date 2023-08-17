@@ -534,6 +534,23 @@ class Helper {
       }
     }
   }
+  
+  Future<void> getTranscript({
+    required GeneralCallback<Uint8List?> callback,
+  }) async {
+    try {
+      final Uint8List? data = await WebApHelper.instance.transcriptQuery();
+      reLoginCount = 0;
+      callback.onSuccess(data);
+    } on DioError catch (dioError) {
+      callback.onFailure(dioError);
+    } catch (e, s) {
+      callback.onError(GeneralResponse.unknownError());
+      if (FirebaseCrashlyticsUtils.isSupported) {
+        await FirebaseCrashlytics.instance.recordError(e, s);
+      }
+    }
+  }
 
   Future<void> getBusTimeTables({
     required DateTime dateTime,

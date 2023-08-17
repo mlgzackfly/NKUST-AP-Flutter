@@ -548,4 +548,16 @@ class WebApHelper {
       WebApParser.instance.roomCourseTableQueryParser(query.data),
     );
   }
+  Future<Uint8List?> transcriptQuery() async {
+    checkLogin();
+    final Response<dynamic> query = await apQuery(
+      'ag102',
+      null,
+      bytesResponse: true,
+    );
+
+    // return WebApParser.instance.transcriptParser(query.data);
+    return Uint8List.fromList(query.data as Uint8List);
+  }
+
 }

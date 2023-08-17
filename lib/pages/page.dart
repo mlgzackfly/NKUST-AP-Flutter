@@ -9,4 +9,5 @@ export 'setting_page.dart';
 export 'study/calculate_units_page.dart';
 export 'study/course_page.dart';
 export 'study/score_page.dart';
+export 'study/transcript_page.dart';
 export 'user_info_page.dart';

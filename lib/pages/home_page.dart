@@ -252,6 +252,14 @@ class HomePageState extends State<HomePage> {
                   needLogin: true,
                 ),
               ),
+			  DrawerSubItem(
+                icon: ApIcon.assignment,
+                title: ap.transcript,
+                onTap: () => _openPage(
+                  TranscriptPage(),
+                  needLogin: true,
+                ),
+              ),
               DrawerSubItem(
                 icon: ApIcon.apps,
                 title: ap.calculateCredits,
