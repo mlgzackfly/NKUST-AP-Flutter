@@ -119,10 +119,18 @@ class WebApParser {
       return data;
     }
     try {
-      final String imageUrl = document
-          .getElementsByTagName('img')[0]
-          .attributes['src']!
-          .substring(2);
+      final String imageUrl;
+      if (document.text?.contains('查無照片資料，請先上傳照片，謝謝！') ?? false)
+      {
+        imageUrl = document
+            .getElementsByTagName('img')[0]
+            .attributes['src']!
+            .substring(2);
+      }
+      else
+      {
+        imageUrl = '/pics/g3.jpg';
+      }
       data['educationSystem'] = tdElements[3].text.replaceAll('學　　制：', '');
       data['department'] = tdElements[4].text.replaceAll('科　　系：', '');
       data['className'] = tdElements[8].text.replaceAll('班　　級：', '');
