@@ -6,17 +6,19 @@ on:
       - master
     tags-ignore:
       - v*
-      -
   pull_request:
     branches:
       - master
+  # 新增憑證更新的定期觸發
+  schedule:
+    - cron: "0 2 */45 * *" # 每 45 天執行憑證更新
+  workflow_dispatch: # 允許手動觸發
 
 env:
-  flutter_version: '3.29.x'
-  java_version: '17'
+  flutter_version: "3.29.x"
+  java_version: "17"
 
 jobs:
-
   build_android:
     name: Build Android App
     runs-on: ubuntu-latest
@@ -26,8 +28,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version:  ${{ env.java_version }}
+          distribution: "zulu"
+          java-version: ${{ env.java_version }}
       - name: Decrypt Android keys
         run: sh ./.github/scripts/decrypt_android_keys.sh
         env:
@@ -35,9 +37,9 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.flutter_version }}
-          channel: 'stable'
+          channel: "stable"
           cache: true
-          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
+          cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:"
       - name: Decrypt dev configs
         run: sh ./scripts/decrypt_dev_configs.sh
         env:
@@ -55,14 +57,14 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version:  ${{ env.java_version }}
+          distribution: "zulu"
+          java-version: ${{ env.java_version }}
       - name: Run Flutter tasks
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.flutter_version }}
-          channel: 'stable'
-          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
+          channel: "stable"
+          cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:"
       - name: Flutter Initiaize
         run: |
           flutter doctor -v
@@ -76,21 +78,21 @@ jobs:
       - name: Build iOS
         run: flutter build ios --release --no-codesign
 
-#  build_web:
-#    name: Build Web App
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: subosito/flutter-action@v2
-#        with:
-#          flutter-version: '3.27.x'
-#          channel: 'stable'
-#      - name: Enable Web
-#        run: flutter config --enable-web
-#      - run: flutter pub get
-#      - name: Build Web
-#        run: flutter build web
+  #  build_web:
+  #    name: Build Web App
+  #    runs-on: ubuntu-latest
+  #
+  #    steps:
+  #      - uses: actions/checkout@v3
+  #      - uses: subosito/flutter-action@v2
+  #        with:
+  #          flutter-version: '3.27.x'
+  #          channel: 'stable'
+  #      - name: Enable Web
+  #        run: flutter config --enable-web
+  #      - run: flutter pub get
+  #      - name: Build Web
+  #        run: flutter build web
 
   #  build_macos:
   #    name: Build macOS App
@@ -124,10 +126,10 @@ jobs:
       - name: Run Flutter tasks
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.x'
-          channel: 'stable'
+          flutter-version: "3.29.x"
+          channel: "stable"
           cache: true
-          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
+          cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:"
       - name: Decrypt dev configs
         run: sh ./scripts/decrypt_dev_configs.sh
         env:
@@ -150,10 +152,10 @@ jobs:
       - name: Run Flutter tasks
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.x'
-          channel: 'stable'
+          flutter-version: "3.29.x"
+          channel: "stable"
           cache: true
-          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
+          cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:"
       - name: Decrypt dev configs
         run: sh ./scripts/decrypt_dev_configs.sh
         env:
@@ -166,3 +168,52 @@ jobs:
       - run: flutter pub get
       - name: Build windows
         run: flutter build windows --release
+
+  # 憑證更新 job（修正格式）
+  update-cert:
+    name: Update Certificate
+    runs-on: ubuntu-latest
+    # 只在定期執行或手動觸發時執行憑證更新
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update Certificate
+        run: |
+          echo "Starting certificate update..."
+
+          # 建立目錄結構
+          mkdir -p assets/ca
+
+          # 下載憑證
+          echo | openssl s_client -connect webap0.nkust.edu.tw:443 -servername webap0.nkust.edu.tw 2>/dev/null | openssl x509 -outform PEM > assets/ca/twca_nkust.cer
+
+          # 檢查憑證是否有效
+          if openssl x509 -in assets/ca/twca_nkust.cer -text -noout >/dev/null 2>&1; then
+            echo "✅ Certificate downloaded successfully"
+            
+            # 顯示憑證資訊
+            echo "Certificate info:"
+            openssl x509 -in assets/ca/twca_nkust.cer -text -noout | grep -E "(Subject:|Issuer:|Not Before:|Not After:)"
+            
+            # 檢查是否有變更
+            if git diff --exit-code assets/ca/twca_nkust.cer >/dev/null 2>&1; then
+              echo "📋 Certificate has not changed"
+            else
+              echo "🔄 Certificate has changed, committing..."
+              
+              # 提交變更
+              git config --local user.email "action@github.com"
+              git config --local user.name "GitHub Action"
+              git add assets/ca/twca_nkust.cer
+              git commit -m "Update twca_nkust.cer certificate - $(date '+%Y-%m-%d %H:%M:%S')"
+              git push
+            fi
+          else
+            echo "❌ Failed to download certificate"
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
