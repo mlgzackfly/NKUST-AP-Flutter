@@ -1,0 +1,82 @@
+name: Update Certificate
+
+on:
+  schedule:
+    # 每 45 天執行一次 (避免過期)
+    - cron: '0 2 */45 * *'
+  workflow_dispatch: # 允許手動觸發
+
+jobs:
+  update-cert:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Get certificate from website
+      run: |
+        # 建立目錄結構
+        mkdir -p assets/ca
+        
+        # 使用 openssl 直接取得憑證
+        echo | openssl s_client -connect webap0.nkust.edu.tw:443 -servername webap0.nkust.edu.tw 2>/dev/null | openssl x509 -outform PEM > assets/ca/twca_nkust.cer
+        
+        # 檢查憑證是否有效
+        if openssl x509 -in assets/ca/twca_nkust.cer -text -noout >/dev/null 2>&1; then
+          echo "Certificate downloaded successfully"
+          
+          # 顯示憑證資訊
+          echo "Certificate info:"
+          openssl x509 -in assets/ca/twca_nkust.cer -text -noout | grep -E "(Subject:|Issuer:|Not Before:|Not After:)"
+        else
+          echo "Failed to download certificate"
+          exit 1
+        fi
+    
+    - name: Check if certificate changed
+      id: check_changes
+      run: |
+        if git diff --exit-code assets/ca/twca_nkust.cer >/dev/null 2>&1; then
+          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "Certificate has not changed"
+        else
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "Certificate has changed"
+        fi
+    
+    - name: Commit and push if changed
+      if: steps.check_changes.outputs.changed == 'true'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add assets/ca/twca_nkust.cer
+        git commit -m "Update twca_nkust.cer certificate - $(date '+%Y-%m-%d %H:%M:%S')"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Create release with certificate
+      if: steps.check_changes.outputs.changed == 'true'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: cert-${{ github.run_number }}
+        release_name: Certificate Update ${{ github.run_number }}
+        body: |
+          Automatic certificate update from webap0.nkust.edu.tw
+          Updated at: ${{ github.event.head_commit.timestamp }}
+        draft: false
+        prerelease: false
+    
+    - name: Upload certificate to release
+      if: steps.check_changes.outputs.changed == 'true'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./assets/ca/twca_nkust.cer
+        asset_name: twca_nkust.cer
+        asset_content_type: application/x-x509-ca-cert
