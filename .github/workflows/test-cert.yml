@@ -1,0 +1,41 @@
+name: Test Certificate Download
+
+on:
+  workflow_dispatch: # 只允許手動觸發進行測試
+
+jobs:
+  test-cert:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Test certificate download
+      run: |
+        echo "Testing certificate download..."
+        
+        # 建立目錄
+        mkdir -p assets/ca
+        
+        # 下載憑證
+        echo | openssl s_client -connect webap0.nkust.edu.tw:443 -servername webap0.nkust.edu.tw 2>/dev/null | openssl x509 -outform PEM > assets/ca/twca_nkust.cer
+        
+        # 檢查結果
+        if [ -f "assets/ca/twca_nkust.cer" ]; then
+          echo "✅ Certificate file created"
+          echo "File size: $(wc -c < assets/ca/twca_nkust.cer) bytes"
+          
+          # 顯示憑證內容的前幾行
+          echo "Certificate content (first 5 lines):"
+          head -5 assets/ca/twca_nkust.cer
+        else
+          echo "❌ Certificate file not created"
+          exit 1
+        fi
+    
+    - name: Upload certificate as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: certificate
+        path: assets/ca/twca_nkust.cer
