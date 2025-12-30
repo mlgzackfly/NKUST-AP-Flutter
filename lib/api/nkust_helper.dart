@@ -11,6 +11,7 @@ import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:native_dio_adapter/native_dio_adapter.dart';
+import 'package:nkust_ap/api/api_endpoints.dart';
 import 'package:nkust_ap/api/ap_status_code.dart';
 import 'package:nkust_ap/api/helper.dart';
 import 'package:nkust_ap/api/parser/nkust_parser.dart';
@@ -54,7 +55,7 @@ class NKUSTHelper {
     cookieJar = CookieJar();
     if (Helper.isSupportCacheData) {
       _manager = DioCacheManager(
-        CacheConfig(baseUrl: 'https://webap.nkust.edu.tw'),
+        CacheConfig(baseUrl: ApiEndpoints.webApBaseUrl),
       );
       dio.interceptors.add(_manager.interceptor as Interceptor);
     }
@@ -75,11 +76,11 @@ class NKUSTHelper {
 
   Future<Uint8List?> getUidValidationImage() async {
     final Response<Uint8List> response = await dio.get<Uint8List>(
-      'https://webap.nkust.edu.tw/nkust/validateCode_foruid.jsp',
+      ApiEndpoints.getWebApUrl(ApiEndpoints.webApValidateCodeForUid),
       options: Options(
         responseType: ResponseType.bytes,
         headers: <String, dynamic>{
-          'Referer': 'https://webap.nkust.edu.tw/',
+          'Referer': '${ApiEndpoints.webApBaseUrl}/',
         },
       ),
     );
@@ -103,7 +104,7 @@ class NKUSTHelper {
       );
 
       final List<Cookie> cookies = await cookieJar
-          .loadForRequest(Uri.parse('https://webap.nkust.edu.tw'));
+          .loadForRequest(Uri.parse(ApiEndpoints.webApBaseUrl));
       final String cookieHeader = cookies
           .map((Cookie cookie) => '${cookie.name}=${cookie.value}')
           .join('; ');
@@ -111,8 +112,8 @@ class NKUSTHelper {
       final http.Response response = await http.post(
         Uri(
           scheme: 'https',
-          host: 'webap.nkust.edu.tw',
-          path: '/nkust/system/getuid_1.jsp',
+          host: ApiEndpoints.webApHost,
+          path: ApiEndpoints.webApGetUid,
           queryParameters: <String, String>{
             'uid': rocId,
             'bir': birthdayText,
@@ -123,7 +124,7 @@ class NKUSTHelper {
         headers: <String, String>{
           'Connection': 'close',
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Referer': 'https://webap.nkust.edu.tw/',
+          'Referer': '${ApiEndpoints.webApBaseUrl}/',
           'Cookie': cookieHeader,
         },
       );
@@ -169,7 +170,7 @@ class NKUSTHelper {
       throw 'NullThrownError';
     }
     final Response<String> res = await dio.post<String>(
-      'https://acad.nkust.edu.tw/app/index.php?Action=mobilercglist',
+      ApiEndpoints.getAcadUrl(ApiEndpoints.acadNotifications),
       data: <String, dynamic>{
         'Rcg': 232,
         'Op': 'getpartlist',

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:html/dom.dart' as html;
 import 'package:html/parser.dart' show parse;
 import 'package:http_parser/http_parser.dart';
+import 'package:nkust_ap/api/api_endpoints.dart';
 import 'package:nkust_ap/api/ap_helper.dart';
 import 'package:nkust_ap/api/ap_status_code.dart';
 import 'package:nkust_ap/api/helper.dart';
@@ -25,8 +26,9 @@ class LeaveHelper {
     dioInit();
   }
 
-  static const String basePath = 'https://leave.nkust.edu.tw/';
-  static const String home = '${basePath}masterindex.aspx';
+  static String get basePath => ApiEndpoints.leaveBaseUrl;
+  static String get home =>
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveMasterIndex);
 
   static LeaveHelper? _instance;
 
@@ -64,12 +66,12 @@ class LeaveHelper {
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36';
 
     dio.options.headers.addAll(<String, String>{
-      'Origin': 'http://leave.nkust.edu.tw',
+      'Origin': 'http://${ApiEndpoints.leaveHost}',
       'Upgrade-Insecure-Requests': '1',
       'Content-Type': 'application/x-www-form-urlencoded',
       'Accept':
           'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-      'Referer': 'https://leave.nkust.edu.tw/LogOn.aspx',
+      'Referer': ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveLogon),
       'Accept-Encoding': 'gzip, deflate',
       'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6',
     });
@@ -170,7 +172,7 @@ class LeaveHelper {
 
     //Get base hidden data.
     final Response<String> res = await dio.get<String>(
-      'https://leave.nkust.edu.tw/LogOn.aspx',
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveLogon),
     );
     final Map<String?, dynamic> requestData = hiddenInputGet(res.data);
     requestData[r'Login1$UserName'] = Helper.username;
@@ -179,7 +181,7 @@ class LeaveHelper {
     requestData['HiddenField1'] = '';
     try {
       await dio.post(
-        'https://leave.nkust.edu.tw/LogOn.aspx',
+        ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveLogon),
         data: requestData,
         options: Options(
           followRedirects: false,
@@ -192,7 +194,7 @@ class LeaveHelper {
       if (e.type == DioExceptionType.badResponse &&
           e.response!.statusCode == 302) {
         //Use 302 to mean login success, nice...
-        await dio.get('https://leave.nkust.edu.tw/masterindex.aspx');
+        await dio.get(ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveMasterIndex));
         isLogin = true;
         return true;
       }
@@ -212,7 +214,7 @@ class LeaveHelper {
       reLoginReTryCounts++;
     }
     final Response<String> res = await dio.get<String>(
-      'https://leave.nkust.edu.tw/AK002MainM.aspx',
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveQuery),
     );
     final Map<String?, dynamic> requestData = allInputValueParser(res.data);
     requestData[r'ctl00$ContentPlaceHolder1$SYS001$DropDownListYms'] =
@@ -220,7 +222,7 @@ class LeaveHelper {
     requestData[r'ctl00$ContentPlaceHolder1$Button1	'] = '確定送出';
     requestData.remove(r'ctl00$ButtonLogOut');
     final Response<String> queryRequest = await dio.post<String>(
-      'https://leave.nkust.edu.tw/AK002MainM.aspx',
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveQuery),
       data: requestData,
       options: Options(
         followRedirects: false,
@@ -243,13 +245,13 @@ class LeaveHelper {
       reLoginReTryCounts++;
     }
     Response<String> res = await dio.get<String>(
-      'https://leave.nkust.edu.tw/CK001MainM.aspx',
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveSubmit),
     );
     Map<String?, dynamic> requestData = hiddenInputGet(res.data);
     requestData[r'ctl00$ContentPlaceHolder1$CK001$ButtonEnter'] = '進入請假作業';
 
     res = await dio.post(
-      'https://leave.nkust.edu.tw/CK001MainM.aspx',
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveSubmit),
       data: requestData,
       options: Options(
         followRedirects: false,
@@ -264,7 +266,7 @@ class LeaveHelper {
     requestData[r'ctl00$ContentPlaceHolder1$CK001$DateUCCEnd$text1'] = fakeDate;
     requestData[r'ctl00$ContentPlaceHolder1$CK001$ButtonCommit'] = '下一步';
     res = await dio.post(
-      'https://leave.nkust.edu.tw/CK001MainM.aspx',
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveSubmit),
       data: requestData,
       options: Options(
         followRedirects: false,
@@ -282,14 +284,14 @@ class LeaveHelper {
     await WebApHelper.instance.loginToLeave();
 
     Response<String> res = await dio.get<String>(
-      'https://leave.nkust.edu.tw/CK001MainM.aspx',
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveSubmit),
     );
 
     Map<String?, dynamic> requestData = hiddenInputGet(res.data);
     requestData[r'ctl00$ContentPlaceHolder1$CK001$ButtonEnter'] = '進入請假作業';
 
     res = await dio.post(
-      'https://leave.nkust.edu.tw/CK001MainM.aspx',
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveSubmit),
       data: requestData,
       options: Options(
         followRedirects: false,
@@ -311,7 +313,7 @@ class LeaveHelper {
 
     requestData[r'ctl00$ContentPlaceHolder1$CK001$ButtonCommit'] = '下一步';
     res = await dio.post(
-      'https://leave.nkust.edu.tw/CK001MainM.aspx',
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveSubmit),
       data: requestData,
       options: Options(
         followRedirects: false,
@@ -369,7 +371,7 @@ class LeaveHelper {
 
       requestData[clickList[i]] = '';
       res = await dio.post(
-        'https://leave.nkust.edu.tw/CK001MainM.aspx',
+        ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveSubmit),
         data: requestData,
         options: Options(
           followRedirects: false,
@@ -385,7 +387,7 @@ class LeaveHelper {
     }
     requestData[r'ctl00$ContentPlaceHolder1$CK001$ButtonCommit2'] = '下一步';
     res = await dio.post(
-      'https://leave.nkust.edu.tw/CK001MainM.aspx',
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveSubmit),
       data: requestData,
       options: Options(
         followRedirects: false,
@@ -413,7 +415,7 @@ class LeaveHelper {
     dio.options.headers['Content-Type'] =
         'multipart/form-data; boundary=${formData.boundary}';
     res = await dio.post(
-      'https://leave.nkust.edu.tw/CK001MainM.aspx',
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveSubmit),
       data: formData,
     );
 

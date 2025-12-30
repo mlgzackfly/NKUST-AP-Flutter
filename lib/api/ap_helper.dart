@@ -7,6 +7,7 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/io.dart';
 import 'package:dio_http_cache/dio_http_cache.dart';
 import 'package:native_dio_adapter/native_dio_adapter.dart';
+import 'package:nkust_ap/api/api_endpoints.dart';
 import 'package:nkust_ap/api/ap_status_code.dart';
 import 'package:nkust_ap/api/helper.dart';
 import 'package:nkust_ap/api/leave_helper.dart';
@@ -65,7 +66,7 @@ class WebApHelper {
 
   Future<void> logout() async {
     try {
-      await dio.post('https://webap.nkust.edu.tw/nkust/reclear.jsp');
+      await dio.post(ApiEndpoints.getWebApUrl(ApiEndpoints.webApLogout));
     } catch (_) {}
   }
 
@@ -76,7 +77,7 @@ class WebApHelper {
     cookieJar = CookieJar();
     if (Helper.isSupportCacheData) {
       _manager = DioCacheManager(
-        CacheConfig(baseUrl: 'https://webap.nkust.edu.tw'),
+        CacheConfig(baseUrl: ApiEndpoints.webApBaseUrl),
       );
       dio.interceptors.add(_manager.interceptor as Interceptor);
     }
@@ -97,11 +98,11 @@ class WebApHelper {
 
   Future<Uint8List?> getValidationImage() async {
     final Response<Uint8List> response = await dio.get<Uint8List>(
-      'https://webap.nkust.edu.tw/nkust/validateCode.jsp',
+      ApiEndpoints.getWebApUrl(ApiEndpoints.webApValidateCode),
       options: Options(
         responseType: ResponseType.bytes,
         headers: <String, dynamic>{
-          'Referer': 'https://webap.nkust.edu.tw/nkust/index_main.html',
+          'Referer': ApiEndpoints.getWebApUrl(ApiEndpoints.webApIndexMain),
         },
       ),
     );
@@ -132,7 +133,7 @@ class WebApHelper {
         log(password);
         log(captchaCode);
         final Response<dynamic> res = await dio.post(
-          'https://webap.nkust.edu.tw/nkust/perchk.jsp',
+          ApiEndpoints.getWebApUrl(ApiEndpoints.webApLogin),
           data: <String, String>{
             'uid': username,
             'pwd': password,
@@ -191,7 +192,7 @@ class WebApHelper {
 
   Future<Response<dynamic>> stayOldPwd() async {
     final Response<dynamic> res = await dio.post(
-      'https://webap.nkust.edu.tw/nkust/system/sys010_stay.jsp',
+      ApiEndpoints.getWebApUrl(ApiEndpoints.webApKeepOldPassword),
       data: <String, String>{
         'cpwd': '',
         'opwd': '',
@@ -220,7 +221,7 @@ class WebApHelper {
     await apQuery('ag304_01', null);
 
     Response<String> res = await dio.post<String>(
-      'https://webap.nkust.edu.tw/nkust/fnc.jsp',
+      ApiEndpoints.getWebApUrl(ApiEndpoints.webApFunction),
       data: <String, String>{'fncid': 'CK004'},
       options: Options(contentType: 'application/x-www-form-urlencoded'),
     );
@@ -233,7 +234,7 @@ class WebApHelper {
             PrivateCookieManager(cookieJar),
           ))
         .post(
-      'https://mobile.nkust.edu.tw/Account/LoginBySkytekPortalNewWindow',
+      ApiEndpoints.getMobileUrl(ApiEndpoints.mobileLoginByPortal),
       data: skyDirectData,
       options: Options(
         followRedirects: false,
@@ -265,7 +266,7 @@ class WebApHelper {
     await apQuery('ag304_01', null);
 
     Response<String> res = await dio.post<String>(
-      'https://webap.nkust.edu.tw/nkust/fnc.jsp',
+      ApiEndpoints.getWebApUrl(ApiEndpoints.webApFunction),
       data: <String, String>{'fncid': 'CK004'},
       options: Options(contentType: 'application/x-www-form-urlencoded'),
     );
@@ -278,7 +279,7 @@ class WebApHelper {
             PrivateCookieManager(cookieJar),
           ))
         .post(
-      'https://oosaf.nkust.edu.tw/Account/LoginBySkytekPortalNewWindow',
+      ApiEndpoints.getOosafUrl(ApiEndpoints.oosafLoginByPortal),
       data: skyDirectData,
       options: Options(
         followRedirects: false,
@@ -310,7 +311,7 @@ class WebApHelper {
     await apQuery('ag304_01', null);
 
     Response<String> res = await dio.post<String>(
-      'https://webap.nkust.edu.tw/nkust/fnc.jsp',
+      ApiEndpoints.getWebApUrl(ApiEndpoints.webApFunction),
       data: <String, String>{'fncid': 'CK004'},
       options: Options(contentType: 'application/x-www-form-urlencoded'),
     );
@@ -323,7 +324,7 @@ class WebApHelper {
             PrivateCookieManager(cookieJar),
           ))
         .post(
-      'https://stdsys.nkust.edu.tw/Student/Account/LoginBySkytekPortalNewWindow',
+      ApiEndpoints.getStdSysUrl(ApiEndpoints.stdSysLoginByPortal),
       data: skyDirectData,
       options: Options(
         followRedirects: false,
@@ -355,14 +356,14 @@ class WebApHelper {
     await apQuery('ag304_01', null);
 
     Response<String> res = await dio.post(
-      'https://webap.nkust.edu.tw/nkust/fnc.jsp',
+      ApiEndpoints.getWebApUrl(ApiEndpoints.webApFunction),
       data: <String, String>{'fncid': 'CK004'},
       options: Options(contentType: 'application/x-www-form-urlencoded'),
     );
     final Map<String?, dynamic> skyDirectData =
         WebApParser.instance.webapToleaveParser(res.data);
     res = await dio.get<String>(
-      'https://leave.nkust.edu.tw/SkyDir.aspx',
+      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveSkyDir),
       queryParameters: <String, dynamic>{
         'u': skyDirectData['uid'],
         'r': skyDirectData['ls_randnum'],
@@ -377,7 +378,7 @@ class WebApHelper {
     );
     if (res.data!.contains('masterindex.aspx')) {
       res = await dio.get(
-        'https://leave.nkust.edu.tw/masterindex.aspx',
+        ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveMasterIndex),
         options: Options(
           followRedirects: false,
           validateStatus: (int? status) {
@@ -418,22 +419,21 @@ class WebApHelper {
       );
     }
     await checkLogin();
-    final String url =
-        'https://webap.nkust.edu.tw/nkust/${queryQid.substring(0, 2)}_pro/$queryQid.jsp';
+    final String url = ApiEndpoints.getWebApQueryUrl(queryQid);
+    final String refererUrl =
+        '${ApiEndpoints.getWebApUrl(ApiEndpoints.webApSystemReferer)}?spath=ag_pro/$queryQid.jsp?';
     Options options;
     dynamic requestData;
     if (cacheKey == null) {
       options = Options(contentType: 'application/x-www-form-urlencoded');
-      dio.options.headers['Referer'] =
-          'https://webap.nkust.edu.tw/nkust/system/sys001_00.jsp?spath=ag_pro/$queryQid.jsp?';
+      dio.options.headers['Referer'] = refererUrl;
       if (bytesResponse != null) {
         options.responseType = ResponseType.bytes;
       }
       requestData = queryData;
     } else {
       dio.options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-      dio.options.headers['Referer'] =
-          'https://webap.nkust.edu.tw/nkust/system/sys001_00.jsp?spath=ag_pro/$queryQid.jsp?';
+      dio.options.headers['Referer'] = refererUrl;
       Options? otherOptions;
       if (bytesResponse != null) {
         otherOptions = Options(responseType: ResponseType.bytes);
@@ -538,17 +538,17 @@ class WebApHelper {
     await loginToStdsys();
 
     final List<Cookie> cookies =
-        await cookieJar.loadForRequest(Uri.parse('https://stdsys.nkust.edu.tw'));
+        await cookieJar.loadForRequest(Uri.parse(ApiEndpoints.stdSysBaseUrl));
     final String cookieHeader = cookies
         .map((Cookie cookie) => '${cookie.name}=${cookie.value}')
         .join('; ');
 
     final Response<Uint8List> response = await dio.get<Uint8List>(
-      'https://stdsys.nkust.edu.tw/student/Doc/Status/Download',
+      ApiEndpoints.getStdSysUrl(ApiEndpoints.stdSysDocDownload),
       options: Options(
         responseType: ResponseType.bytes,
         headers: <String, dynamic>{
-          'Referer': 'https://stdsys.nkust.edu.tw/student/Doc/Status',
+          'Referer': ApiEndpoints.getStdSysUrl(ApiEndpoints.stdSysDocStatus),
           'Cookie': cookieHeader,
         },
       ),

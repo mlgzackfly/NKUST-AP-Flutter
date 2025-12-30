@@ -8,6 +8,7 @@ import 'package:dio/io.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:nkust_ap/api/api_endpoints.dart';
 import 'package:nkust_ap/api/ap_helper.dart';
 import 'package:nkust_ap/api/ap_status_code.dart';
 import 'package:nkust_ap/api/parser/mobile_nkust_parser.dart';
@@ -38,29 +39,39 @@ class MobileNkustHelper {
     initCookiesJar();
   }
 
-  static const String baseUrl = 'https://mobile.nkust.edu.tw/';
-  static const String busBaseUrl = 'https://vms.nkust.edu.tw/';
+  static String get baseUrl => ApiEndpoints.mobileBaseUrl;
+  static String get busBaseUrl => ApiEndpoints.vmsBaseUrl;
 
-  static const String loginUrl = baseUrl;
-  static const String homeUrl = '${baseUrl}Home/Index';
-  static const String courseUrl = '${baseUrl}Student/Course';
-  static const String scoreUrl = '${baseUrl}Student/Grades';
-  static const String pictureUrl = '${baseUrl}Common/GetStudentPhoto';
-  static const String midAlertsUrl = '${baseUrl}Student/Grades/MidWarning';
-  static const String busTimetablePageUrl = '${busBaseUrl}Bus/Bus/Timetable';
-  static const String busTimetableApiUrl =
-      '${busBaseUrl}Bus/Bus/GetTimetableGrid';
-  static const String busBookApiUrl = '${busBaseUrl}Bus/Bus/CreateReserve';
-  static const String busUnbookApiUrl = '${busBaseUrl}Bus/Bus/CancelReserve';
-  static const String busUserRecordPageUrl = '${busBaseUrl}Bus/Bus/Reserve';
-  static const String busUserRecordApiUrl =
-      '${busBaseUrl}Bus/Bus/GetReserveGrid';
-  static const String busViolationRecordsPageUrl =
-      '${busBaseUrl}Bus/Bus/Illegal';
-  static const String busViolationRecordsApiUrl =
-      '${busBaseUrl}Bus/Bus/GetIllegalGrid';
+  static String get loginUrl => baseUrl;
+  static String get homeUrl =>
+      ApiEndpoints.getMobileUrl(ApiEndpoints.mobileHome);
+  static String get courseUrl =>
+      ApiEndpoints.getMobileUrl(ApiEndpoints.mobileCourse);
+  static String get scoreUrl =>
+      ApiEndpoints.getMobileUrl(ApiEndpoints.mobileScore);
+  static String get pictureUrl =>
+      ApiEndpoints.getMobileUrl(ApiEndpoints.mobilePhoto);
+  static String get midAlertsUrl =>
+      ApiEndpoints.getMobileUrl(ApiEndpoints.mobileMidAlerts);
+  static String get busTimetablePageUrl =>
+      ApiEndpoints.getVmsUrl(ApiEndpoints.vmsBusTimetablePage);
+  static String get busTimetableApiUrl =>
+      ApiEndpoints.getVmsUrl(ApiEndpoints.vmsBusTimetableApi);
+  static String get busBookApiUrl =>
+      ApiEndpoints.getVmsUrl(ApiEndpoints.vmsBusBook);
+  static String get busUnbookApiUrl =>
+      ApiEndpoints.getVmsUrl(ApiEndpoints.vmsBusUnbook);
+  static String get busUserRecordPageUrl =>
+      ApiEndpoints.getVmsUrl(ApiEndpoints.vmsBusReservePage);
+  static String get busUserRecordApiUrl =>
+      ApiEndpoints.getVmsUrl(ApiEndpoints.vmsBusReserveApi);
+  static String get busViolationRecordsPageUrl =>
+      ApiEndpoints.getVmsUrl(ApiEndpoints.vmsBusViolationPage);
+  static String get busViolationRecordsApiUrl =>
+      ApiEndpoints.getVmsUrl(ApiEndpoints.vmsBusViolationApi);
 
-  static const String checkExpireUrl = '${baseUrl}Account/CheckExpire';
+  static String get checkExpireUrl =>
+      ApiEndpoints.getMobileUrl(ApiEndpoints.mobileCheckExpire);
 
   static MobileNkustHelper? _instance;
 

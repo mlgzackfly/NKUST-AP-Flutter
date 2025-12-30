@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:ap_common/ap_common.dart';
-import 'package:ap_common_firebase/ap_common_firebase.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:nkust_ap/api/api_endpoints.dart';
+import 'package:nkust_ap/api/api_error_handler.dart';
 import 'package:nkust_ap/api/ap_helper.dart';
 import 'package:nkust_ap/api/ap_status_code.dart';
 import 'package:nkust_ap/api/bus_helper.dart';
@@ -28,9 +29,9 @@ import 'package:nkust_ap/models/server_info_data.dart';
 import 'package:nkust_ap/utils/global.dart';
 
 class Helper {
-  static const String host = 'nkust.taki.dog';
+  static String get host => ApiEndpoints.apiHost;
 
-  static const String version = 'v3';
+  static String get version => ApiEndpoints.apiVersion;
 
   //LOGIN API
   static const int userDataError = 1401;
@@ -215,17 +216,12 @@ class Helper {
         });
       }
       return (callback == null) ? data.data : callback.onSuccess(data.data);
-    } on DioException catch (dioError) {
-      if (callback == null) {
-        rethrow;
-      } else {
-        callback.onFailure(dioError);
-      }
     } catch (e, s) {
-      callback?.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleOptionalCallback(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
   }
 
@@ -288,14 +284,12 @@ class Helper {
         );
       }
       return (callback == null) ? data : callback.onSuccess(data) as UserInfo?;
-    } on DioException catch (dioError) {
-      callback?.onFailure(dioError);
-      if (callback == null) rethrow;
     } catch (e, s) {
-      callback?.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleOptionalCallback(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
     return null;
   }
@@ -333,14 +327,12 @@ class Helper {
       return (callback == null)
           ? data
           : callback.onSuccess(data!) as SemesterData?;
-    } on DioException catch (dioError) {
-      callback?.onFailure(dioError);
-      if (callback == null) rethrow;
     } catch (e, s) {
-      callback?.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleOptionalCallback(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
     return null;
   }
@@ -369,14 +361,12 @@ class Helper {
       }
       if (data != null && data.scores.isEmpty) data = null;
       return (callback == null) ? data : callback.onSuccess(data) as ScoreData?;
-    } on DioException catch (dioError) {
-      callback?.onFailure(dioError);
-      if (callback == null) rethrow;
     } catch (e, s) {
-      callback?.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleOptionalCallback(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
     return null;
   }
@@ -418,10 +408,11 @@ class Helper {
       callback?.onFailure(dioError);
       if (callback == null) rethrow;
     } catch (e, s) {
-      callback?.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleOptionalCallback(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
   }
 
@@ -437,13 +428,12 @@ class Helper {
       );
       reLoginCount = 0;
       callback.onSuccess(data);
-    } on DioException catch (dioError) {
-      callback.onFailure(dioError);
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallback(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
   }
 
@@ -457,13 +447,12 @@ class Helper {
         semester.value,
       );
       callback.onSuccess(data);
-    } on DioException catch (dioError) {
-      callback.onFailure(dioError);
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallback(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
   }
 
@@ -484,13 +473,12 @@ class Helper {
 
       reLoginCount = 0;
       callback.onSuccess(data);
-    } on DioException catch (dioError) {
-      callback.onFailure(dioError);
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallback(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
   }
 
@@ -507,13 +495,12 @@ class Helper {
       );
       reLoginCount = 0;
       callback.onSuccess(data);
-    } on DioException catch (dioError) {
-      callback.onFailure(dioError);
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallback(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
   }
 
@@ -542,22 +529,13 @@ class Helper {
         );
         return;
       }
-    } on DioException catch (dioError) {
-      if (dioError.hasResponse) {
-        BusHelper.reLoginReTryCounts = 0;
-        if (dioError.isServerError) {
-          callback.onError(dioError.serverErrorResponse);
-        } else {
-          callback.onFailure(dioError);
-        }
-      } else {
-        callback.onFailure(dioError);
-      }
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallbackWithServerCheck(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+        onHasResponse: () => BusHelper.reLoginReTryCounts = 0,
+      );
     }
   }
 
@@ -574,23 +552,13 @@ class Helper {
       reLoginCount = 0;
       callback.onSuccess(data);
       return;
-    } on DioException catch (dioError) {
-      if (dioError.hasResponse) {
-        BusHelper.reLoginReTryCounts = 0;
-
-        if (dioError.isServerError) {
-          callback.onError(dioError.serverErrorResponse);
-        } else {
-          callback.onFailure(dioError);
-        }
-      } else {
-        callback.onFailure(dioError);
-      }
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallbackWithServerCheck(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+        onHasResponse: () => BusHelper.reLoginReTryCounts = 0,
+      );
     }
   }
 
@@ -608,23 +576,13 @@ class Helper {
       reLoginCount = 0;
       callback.onSuccess(data);
       return;
-    } on DioException catch (dioError) {
-      if (dioError.hasResponse) {
-        BusHelper.reLoginReTryCounts = 0;
-
-        if (dioError.isServerError) {
-          callback.onError(dioError.serverErrorResponse);
-        } else {
-          callback.onFailure(dioError);
-        }
-      } else {
-        callback.onFailure(dioError);
-      }
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallbackWithServerCheck(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+        onHasResponse: () => BusHelper.reLoginReTryCounts = 0,
+      );
     }
   }
 
@@ -642,23 +600,13 @@ class Helper {
       reLoginCount = 0;
       callback.onSuccess(data);
       return;
-    } on DioException catch (dioError) {
-      if (dioError.hasResponse) {
-        BusHelper.reLoginReTryCounts = 0;
-
-        if (dioError.isServerError) {
-          callback.onError(dioError.serverErrorResponse);
-        } else {
-          callback.onFailure(dioError);
-        }
-      } else {
-        callback.onFailure(dioError);
-      }
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallbackWithServerCheck(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+        onHasResponse: () => BusHelper.reLoginReTryCounts = 0,
+      );
     }
   }
 
@@ -675,23 +623,13 @@ class Helper {
       reLoginCount = 0;
       callback.onSuccess(data);
       return;
-    } on DioException catch (dioError) {
-      if (dioError.hasResponse) {
-        BusHelper.reLoginReTryCounts = 0;
-
-        if (dioError.isServerError) {
-          callback.onError(dioError.serverErrorResponse);
-        } else {
-          callback.onFailure(dioError);
-        }
-      } else {
-        callback.onFailure(dioError);
-      }
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallbackWithServerCheck(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+        onHasResponse: () => BusHelper.reLoginReTryCounts = 0,
+      );
     }
   }
 
@@ -703,21 +641,12 @@ class Helper {
       final NotificationsData data =
           await NKUSTHelper.instance.getNotifications(page);
       callback.onSuccess(data);
-    } on DioException catch (dioError) {
-      if (dioError.hasResponse) {
-        if (dioError.isServerError) {
-          callback.onError(dioError.serverErrorResponse);
-        } else {
-          callback.onFailure(dioError);
-        }
-      } else {
-        callback.onFailure(dioError);
-      }
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallbackWithServerCheck(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
   }
 
@@ -730,21 +659,12 @@ class Helper {
           .getLeaves(year: semester.year, semester: semester.value);
 
       callback.onSuccess(data);
-    } on DioException catch (dioError) {
-      if (dioError.hasResponse) {
-        if (dioError.isServerError) {
-          callback.onError(dioError.serverErrorResponse);
-        } else {
-          callback.onFailure(dioError);
-        }
-      } else {
-        callback.onFailure(dioError);
-      }
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallbackWithServerCheck(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
   }
 
@@ -755,21 +675,12 @@ class Helper {
       final LeaveSubmitInfoData data =
           await LeaveHelper.instance.getLeavesSubmitInfo();
       callback.onSuccess(data);
-    } on DioException catch (dioError) {
-      if (dioError.hasResponse) {
-        if (dioError.isServerError) {
-          callback.onError(dioError.serverErrorResponse);
-        } else {
-          callback.onFailure(dioError);
-        }
-      } else {
-        callback.onFailure(dioError);
-      }
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallbackWithServerCheck(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
   }
 
@@ -782,21 +693,12 @@ class Helper {
       final Response<dynamic>? res =
           await LeaveHelper.instance.leavesSubmit(data, proofImage: image);
       callback.onSuccess(res);
-    } on DioException catch (dioError) {
-      if (dioError.hasResponse) {
-        if (dioError.isServerError) {
-          callback.onError(dioError.serverErrorResponse);
-        } else {
-          callback.onFailure(dioError);
-        }
-      } else {
-        callback.onFailure(dioError);
-      }
     } catch (e, s) {
-      callback.onError(GeneralResponse.unknownError());
-      if (FirebaseCrashlyticsUtils.isSupported) {
-        await FirebaseCrashlytics.instance.recordError(e, s);
-      }
+      await ApiErrorHandler.handleCallbackWithServerCheck(
+        error: e,
+        stackTrace: s,
+        callback: callback,
+      );
     }
   }
 

@@ -7,6 +7,7 @@ import 'package:crypto/crypto.dart';
 import 'package:dio/io.dart';
 import 'package:dio_http_cache/dio_http_cache.dart';
 import 'package:native_dio_adapter/native_dio_adapter.dart';
+import 'package:nkust_ap/api/api_endpoints.dart';
 import 'package:nkust_ap/api/helper.dart';
 import 'package:nkust_ap/api/parser/api_tool.dart';
 import 'package:nkust_ap/api/parser/bus_parser.dart';
@@ -138,7 +139,7 @@ class BusHelper {
   static String userViolationRecordsCacheKey =
       '${Helper.username}_busViolationRecords';
   static late BusEncrypt busEncryptObject;
-  static String busHost = 'http://bus.kuas.edu.tw/';
+  static String busHost = '${ApiEndpoints.busKuasBaseUrl}/';
 
   //ignore: prefer_constructors_over_static_methods
   static BusHelper get instance {
@@ -161,7 +162,7 @@ class BusHelper {
     dio = Dio();
     if (Helper.isSupportCacheData) {
       _manager =
-          DioCacheManager(CacheConfig(baseUrl: 'http://bus.kuas.edu.tw'));
+          DioCacheManager(CacheConfig(baseUrl: ApiEndpoints.busKuasBaseUrl));
       dio.interceptors.add(_manager.interceptor as Interceptor);
       _manager.clearAll();
     }
@@ -186,8 +187,9 @@ class BusHelper {
     // Get global cookie. Only cookies get from the root directory can be used.
     await dio.head(busHost);
     // This function will download encrypt js bus login required.
-    final Response<String> res =
-        await dio.get<String>('http://bus.kuas.edu.tw/API/Scripts/a1');
+    final Response<String> res = await dio.get<String>(
+      ApiEndpoints.getBusKuasUrl(ApiEndpoints.busKuasScripts),
+    );
     busEncryptObject = BusEncrypt(jsCode: res.data!);
   }
 
@@ -215,7 +217,7 @@ class BusHelper {
 
     final Response<Map<String, dynamic>> res =
         await dio.post<Map<String, dynamic>>(
-      '${busHost}API/Users/login',
+      ApiEndpoints.getBusKuasUrl(ApiEndpoints.busKuasLogin),
       data: <String, String?>{
         'account': Helper.username,
         'password': Helper.password,
@@ -287,7 +289,7 @@ class BusHelper {
     }
     final Response<Map<String, dynamic>> res =
         await dio.post<Map<String, dynamic>>(
-      '${busHost}API/Frequencys/getAll',
+      ApiEndpoints.getBusKuasUrl(ApiEndpoints.busKuasFrequencies),
       data: requestData,
       options: options,
     );
@@ -323,7 +325,7 @@ class BusHelper {
 
     final Response<Map<String, dynamic>> res =
         await dio.post<Map<String, dynamic>>(
-      '${busHost}API/Reserves/add',
+      ApiEndpoints.getBusKuasUrl(ApiEndpoints.busKuasReservesAdd),
       data: <String, dynamic>{
         'busId': int.parse(busId),
       },
@@ -348,7 +350,7 @@ class BusHelper {
     }
     final Response<Map<String, dynamic>> res =
         await dio.post<Map<String, dynamic>>(
-      '${busHost}API/Reserves/remove',
+      ApiEndpoints.getBusKuasUrl(ApiEndpoints.busKuasReservesRemove),
       data: <String, dynamic>{
         'reserveId': int.parse(busId),
       },
@@ -399,7 +401,7 @@ class BusHelper {
 
     final Response<Map<String, dynamic>> res =
         await dio.post<Map<String, dynamic>>(
-      '${busHost}API/Reserves/getOwn',
+      ApiEndpoints.getBusKuasUrl(ApiEndpoints.busKuasReservesOwn),
       data: requestData,
       options: options,
     );
@@ -449,7 +451,7 @@ class BusHelper {
 
     final Response<Map<String, dynamic>> res =
         await dio.post<Map<String, dynamic>>(
-      '${busHost}API/Illegals/getOwn',
+      ApiEndpoints.getBusKuasUrl(ApiEndpoints.busKuasIllegalsOwn),
       data: requestData,
       options: options,
     );
