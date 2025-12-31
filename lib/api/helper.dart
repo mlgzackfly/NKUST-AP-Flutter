@@ -4,10 +4,10 @@ import 'dart:typed_data';
 
 import 'package:ap_common/ap_common.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:nkust_ap/api/api_endpoints.dart';
-import 'package:nkust_ap/api/api_error_handler.dart';
 import 'package:nkust_ap/api/ap_helper.dart';
 import 'package:nkust_ap/api/ap_status_code.dart';
+import 'package:nkust_ap/api/api_endpoints.dart';
+import 'package:nkust_ap/api/api_error_handler.dart';
 import 'package:nkust_ap/api/bus_helper.dart';
 import 'package:nkust_ap/api/leave_helper.dart';
 import 'package:nkust_ap/api/mobile_nkust_helper.dart';
@@ -294,7 +294,7 @@ class Helper {
     return null;
   }
 
-  Future<Uint8List?> getUserPicture() async {
+  Future<Uint8List?> getUserPicture() {
     switch (selector?.userInfo) {
       case mobile:
         return MobileNkustHelper.instance.getUserPicture();
