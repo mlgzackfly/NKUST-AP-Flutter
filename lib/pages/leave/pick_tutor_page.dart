@@ -250,7 +250,7 @@ class _PickTutorPageState extends State<PickTutorPage> {
           ),
         ),
       ),
-    ).then<void>((int? position) async {
+    ).then<void>((int? position) {
       if (position != null) {
         switch (type) {
           case _Type.campus:

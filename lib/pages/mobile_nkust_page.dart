@@ -55,7 +55,7 @@ class _MobileNkustPageState extends State<MobileNkustPage> {
       floatingActionButton: kDebugMode
           ? FloatingActionButton(
               child: const Icon(Icons.done_outline),
-              onPressed: () async {
+              onPressed: () {
                 // final html = await webViewController.getHtml();
                 // debugPrint(html);
                 MobileNkustHelper.instance.getScores();

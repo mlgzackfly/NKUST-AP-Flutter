@@ -178,7 +178,7 @@ class LoginPageState extends State<LoginPage> {
         password: _password.text,
         clearCache: true,
         callback: GeneralCallback<LoginResponse?>(
-          onSuccess: (LoginResponse? response) async {
+          onSuccess: (LoginResponse? response) {
             PreferenceUtil.instance
                 .setString(Constants.prefUsername, _username.text);
             if (isRememberPassword) {

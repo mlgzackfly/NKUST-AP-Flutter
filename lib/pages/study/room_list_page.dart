@@ -123,7 +123,7 @@ class _RoomListPageState extends State<RoomListPage> {
             }
           });
         },
-        onFailure: (DioException e) async {
+        onFailure: (DioException e) {
           if (e.type != DioExceptionType.cancel) {
             setState(() {
               state = PageState.custom;
@@ -138,7 +138,7 @@ class _RoomListPageState extends State<RoomListPage> {
             );
           }
         },
-        onError: (GeneralResponse generalResponse) async {
+        onError: (GeneralResponse generalResponse) {
           setState(() {
             state = PageState.custom;
             customStateHint = generalResponse.getGeneralMessage(context);

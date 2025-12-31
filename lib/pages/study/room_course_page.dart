@@ -86,7 +86,7 @@ class _EmptyRoomPageState extends State<EmptyRoomPage> {
             });
           }
         },
-        onFailure: (DioException e) async {
+        onFailure: (DioException e) {
           if (e.type != DioExceptionType.cancel && mounted) {
             setState(() {
               state = CourseState.custom;
@@ -101,7 +101,7 @@ class _EmptyRoomPageState extends State<EmptyRoomPage> {
             );
           }
         },
-        onError: (GeneralResponse generalResponse) async {
+        onError: (GeneralResponse generalResponse) {
           if (mounted) {
             setState(() {
               state = CourseState.custom;
