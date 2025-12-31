@@ -162,46 +162,6 @@ class LeaveHelper {
     }
   }
 
-  @Deprecated(
-    'Since 2021/07 School add Google re-captcha in leave system crawler login not working',
-  )
-  Future<bool> leaveLogin() async {
-    if (Helper.username == null || Helper.password == null) {
-      throw 'NullThrownError';
-    }
-
-    //Get base hidden data.
-    final Response<String> res = await dio.get<String>(
-      ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveLogon),
-    );
-    final Map<String?, dynamic> requestData = hiddenInputGet(res.data);
-    requestData[r'Login1$UserName'] = Helper.username;
-    requestData[r'Login1$Password'] = Helper.password;
-    requestData[r'Login1$LoginButton'] = '登入';
-    requestData['HiddenField1'] = '';
-    try {
-      await dio.post(
-        ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveLogon),
-        data: requestData,
-        options: Options(
-          followRedirects: false,
-          contentType: Headers.formUrlEncodedContentType,
-        ),
-      );
-      //login fail
-      return false;
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.badResponse &&
-          e.response!.statusCode == 302) {
-        //Use 302 to mean login success, nice...
-        await dio.get(ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveMasterIndex));
-        isLogin = true;
-        return true;
-      }
-    }
-    return false;
-  }
-
   Future<LeaveData> getLeaves({String? year, String? semester}) async {
     if (Helper.username == null || Helper.password == null) {
       throw 'NullThrownError';

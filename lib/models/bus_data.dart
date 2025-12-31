@@ -43,7 +43,7 @@ class BusData {
 
 @JsonSerializable()
 class BusTime {
-  @Deprecated('legacy config')
+  /// Legacy field - kept for API compatibility but no longer used in UI
   DateTime? endEnrollDateTime;
   DateTime departureTime;
   String startStation;
@@ -59,7 +59,7 @@ class BusTime {
   bool? canBook;
 
   BusTime({
-    @Deprecated('legacy config') this.endEnrollDateTime,
+    this.endEnrollDateTime,
     required this.departureTime,
     required this.startStation,
     required this.endStation,
@@ -85,14 +85,6 @@ class BusTime {
     }
   }
 
-//  String getSpecialTrainRemark() {
-//    print(specialTrainRemark);
-//    if (specialTrainRemark.length == 0)
-//      return "";
-//    else
-//      return "${specialTrainRemark.replaceAll("\n", "").replaceAll("<br />", "\n")}\n";
-//  }
-
   static List<BusTime> toList(List<Map<String, dynamic>> jsonArray) {
     final List<BusTime> list = <BusTime>[];
     for (final Map<String, dynamic> item in jsonArray) {
@@ -114,13 +106,6 @@ class BusTime {
 
   bool canReserve() {
     return canBook ?? true;
-  }
-
-  @Deprecated('legacy config')
-  String getEndEnrollDateTime() {
-    initializeDateFormatting();
-    final DateFormat dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss ');
-    return dateFormat.format(endEnrollDateTime!);
   }
 
   Color getColorState(BuildContext context) {
