@@ -16,7 +16,7 @@ class SemesterPicker extends StatefulWidget {
 }
 
 class SemesterPickerState extends State<SemesterPicker> {
-  late SemesterData semesterData;
+  SemesterData? semesterData;
   Semester? selectSemester;
 
   int currentIndex = 0;
@@ -68,10 +68,10 @@ class SemesterPickerState extends State<SemesterPicker> {
     if (cacheData != null) {
       semesterData = cacheData;
       widget.onSelect
-          ?.call(semesterData.defaultSemester, semesterData.defaultIndex);
+          ?.call(cacheData.defaultSemester, cacheData.defaultIndex);
       if (mounted) {
         setState(() {
-          selectSemester = semesterData.defaultSemester;
+          selectSemester = cacheData.defaultSemester;
         });
       }
     }
@@ -86,25 +86,25 @@ class SemesterPickerState extends State<SemesterPicker> {
       callback: GeneralCallback<SemesterData>(
         onSuccess: (SemesterData data) {
           semesterData = data;
-          semesterData.save();
+          data.save();
           final String _ = PreferenceUtil.instance.getString(
             ApConstants.currentSemesterCode,
             ApConstants.semesterLatest,
           );
           final String newSemester =
-              '${Helper.username}_${semesterData.defaultSemester.code}';
+              '${Helper.username}_${data.defaultSemester.code}';
           PreferenceUtil.instance.setString(
             ApConstants.currentSemesterCode,
             newSemester,
           );
           if (mounted) {
-            currentIndex = semesterData.defaultIndex;
+            currentIndex = data.defaultIndex;
             widget.onSelect?.call(
-              semesterData.defaultSemester,
-              semesterData.defaultIndex,
+              data.defaultSemester,
+              data.defaultIndex,
             );
             setState(() {
-              selectSemester = semesterData.defaultSemester;
+              selectSemester = data.defaultSemester;
             });
           }
         },
@@ -129,19 +129,20 @@ class SemesterPickerState extends State<SemesterPicker> {
   }
 
   void pickSemester() {
+    final SemesterData data = semesterData!;
     showDialog<int>(
       context: context,
       builder: (BuildContext context) => SimpleOptionDialog(
         title: ApLocalizations.of(context).pickSemester,
         items: <String>[
-          for (final Semester item in semesterData.data) item.text,
+          for (final Semester item in data.data) item.text,
         ],
         index: currentIndex,
         onSelected: (int index) {
           currentIndex = index;
-          widget.onSelect!(semesterData.data[currentIndex], currentIndex);
+          widget.onSelect!(data.data[currentIndex], currentIndex);
           setState(() {
-            selectSemester = semesterData.data[currentIndex];
+            selectSemester = data.data[currentIndex];
           });
         },
       ),
