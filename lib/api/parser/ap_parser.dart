@@ -9,8 +9,7 @@ import 'package:html/dom.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:nkust_ap/api/helper.dart';
 
-//TODO confirm this rule
-//ignore_for_file: unreachable_from_main
+// ignore_for_file: unreachable_from_main
 
 final String specialSpace = String.fromCharCode(160);
 

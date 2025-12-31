@@ -31,8 +31,6 @@ class SemesterPickerState extends State<SemesterPicker> {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        //TODO check nullable
-        //ignore: unnecessary_null_comparison
         if (semesterData != null) pickSemester();
         if (widget.featureTag != null) {
           AnalyticsUtil.instance
@@ -99,19 +97,6 @@ class SemesterPickerState extends State<SemesterPicker> {
             ApConstants.currentSemesterCode,
             newSemester,
           );
-          //TODO clear old course notify, but may be improve
-          // if (!oldSemester.contains(semesterData.defaultSemester.code)) {
-          //   //TODO check nullable
-          //   final CourseNotifyData notifyData =
-          //       CourseNotifyData.load(oldSemester);
-          //   //ignore: unnecessary_null_comparison
-          //   if (notifyData != null && NotificationUtil.instance.isSupport) {
-          //     CourseNotifyData.clearOldVersionNotification(
-          //       tag: oldSemester,
-          //       newTag: semesterData.defaultSemester.code,
-          //     );
-          //   }
-          // }
           if (mounted) {
             currentIndex = semesterData.defaultIndex;
             widget.onSelect?.call(

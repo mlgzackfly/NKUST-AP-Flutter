@@ -209,7 +209,7 @@ class _PickTutorPageState extends State<PickTutorPage> {
   }
 
   void pickItem(_Type type, int currentIndex, List<String?> items) {
-    //TODO text fix
+    // FIXME: Use proper localized titles for each type
     String title = '';
     switch (type) {
       case _Type.campus:

@@ -96,7 +96,7 @@ class Reservation {
   String toRawJson() => jsonEncode(toJson());
 }
 
-//TODO String to DateTime
+// FIXME: Implement proper String to DateTime conversion
 class DateTimeConverter implements JsonConverter<DateTime, DateTime> {
   const DateTimeConverter();
 

@@ -61,7 +61,6 @@ class ScorePageState extends State<ScorePage> {
         },
       ),
       onRefresh: () async {
-        //TODO implement block callback function
         await _getSemesterScore();
         AnalyticsUtil.instance.logEvent('refresh_swipe');
         return null;

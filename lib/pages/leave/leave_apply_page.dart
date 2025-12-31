@@ -634,7 +634,6 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
     } else if (leaveSubmitInfo.tutor == null && teacher == null) {
       UiUtil.instance.showToast(context, ap.pickTeacher);
     } else if (_formKey.currentState!.validate()) {
-      //TODO submit summary
       String tutorId;
       String tutorName;
       if (leaveSubmitInfo.tutor == null) {

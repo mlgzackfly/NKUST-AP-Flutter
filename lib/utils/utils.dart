@@ -75,15 +75,9 @@ class Utils {
     return result;
   }
 
+  /// Placeholder for native image resizing.
+  /// Currently returns the original file without modification.
   static Future<File> resizeImageByNative(File file) async {
-    //TODO maybe remove
-    // final Directory appDocDir = await getTemporaryDirectory();
-    // final String tmpPath = '${appDocDir.path}/proof.jpg';
-    // var result = await FlutterImageCompress.compressAndGetFile(
-    //   file.absolute.path,
-    //   tmpPath,
-    //   quality: 70,
-    // );
     return file;
   }
 

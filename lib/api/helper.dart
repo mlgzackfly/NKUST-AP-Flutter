@@ -314,10 +314,8 @@ class Helper {
           data = SemesterData.load();
           await Future<void>.delayed(const Duration(milliseconds: 100));
         case inkust:
-          //TODO
-          break;
         case mobile:
-          //TODO
+          // Not implemented for this selector
           break;
         case webap:
         default:
@@ -350,7 +348,7 @@ class Helper {
             semester: semester.value,
           );
         case inkust:
-          //TODO
+          // Not implemented for this selector
           break;
         case webap:
         default:

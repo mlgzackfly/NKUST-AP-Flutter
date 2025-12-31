@@ -209,7 +209,7 @@ class LoginPageState extends State<LoginPage> {
               case ApStatusCode.userDataError:
                 message = ap.loginFail;
               case ApStatusCode.passwordFiveTimesError:
-                //TODO i18n
+                // FIXME: Add i18n support for this message
                 message = '您先前已登入失敗達5次!!請30分鐘後再嘗試登入!!';
               case ApStatusCode.cancel:
                 message = null;

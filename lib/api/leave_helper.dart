@@ -113,7 +113,7 @@ class LeaveHelper {
 
   Future<bool> isCookieAlive() async {
     try {
-      //TODO check cookies is expire
+      // FIXME: Implement proper cookie expiration check
       final Response<dynamic> res = await dio.get('');
       return res.data == 'alive';
     } catch (_) {}

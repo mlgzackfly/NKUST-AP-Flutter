@@ -130,7 +130,7 @@ class MobileNkustParser {
   }
 
   static MidtermAlertsData midtermAlerts(dynamic rawHtml) {
-    //TODO Implement Midterm Alerts Parser for mobile nkust
+    // FIXME: Implement Midterm Alerts Parser for mobile nkust
     final MidtermAlertsData midtermAlertsData = MidtermAlertsData(
       courses: <MidtermAlerts>[],
     );
