@@ -4,8 +4,7 @@ import 'package:nkust_ap/api/helper.dart';
 import 'package:nkust_ap/models/room_data.dart';
 import 'package:nkust_ap/pages/study/room_course_page.dart';
 import 'package:nkust_ap/utils/app_localizations.dart';
-
-enum _State { loading, finish, custom }
+import 'package:nkust_ap/utils/page_state.dart';
 
 class RoomListPage extends StatefulWidget {
   @override
@@ -15,7 +14,7 @@ class RoomListPage extends StatefulWidget {
 class _RoomListPageState extends State<RoomListPage> {
   late AppLocalizations app;
 
-  _State state = _State.loading;
+  PageState state = PageState.loading;
 
   int campusIndex = 0;
   int roomIndex = 0;
@@ -72,11 +71,11 @@ class _RoomListPageState extends State<RoomListPage> {
 
   Widget body() {
     switch (state) {
-      case _State.loading:
+      case PageState.loading:
         return const Center(
           child: CircularProgressIndicator(),
         );
-      case _State.finish:
+      case PageState.finish:
         return ListView.builder(
           itemBuilder: (BuildContext context, int index) {
             return ListTile(
@@ -94,7 +93,8 @@ class _RoomListPageState extends State<RoomListPage> {
           },
           itemCount: roomData!.data.length,
         );
-      case _State.custom:
+      case PageState.custom:
+      case _:
         return InkWell(
           onTap: () {
             _getRoomList();
@@ -102,7 +102,7 @@ class _RoomListPageState extends State<RoomListPage> {
           },
           child: HintContent(
             icon: ApIcon.classIcon,
-            content: customStateHint!,
+            content: customStateHint ?? '',
           ),
         );
     }
@@ -116,9 +116,9 @@ class _RoomListPageState extends State<RoomListPage> {
           setState(() {
             roomData = data;
             if (roomData != null) {
-              state = _State.finish;
+              state = PageState.finish;
             } else {
-              state = _State.custom;
+              state = PageState.custom;
               customStateHint = ApLocalizations.of(context).somethingError;
             }
           });
@@ -126,7 +126,7 @@ class _RoomListPageState extends State<RoomListPage> {
         onFailure: (DioException e) async {
           if (e.type != DioExceptionType.cancel) {
             setState(() {
-              state = _State.custom;
+              state = PageState.custom;
               customStateHint = e.i18nMessage;
             });
           }
@@ -140,7 +140,7 @@ class _RoomListPageState extends State<RoomListPage> {
         },
         onError: (GeneralResponse generalResponse) async {
           setState(() {
-            state = _State.custom;
+            state = PageState.custom;
             customStateHint = generalResponse.getGeneralMessage(context);
           });
         },

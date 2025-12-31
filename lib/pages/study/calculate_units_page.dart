@@ -2,16 +2,7 @@ import 'package:ap_common/ap_common.dart';
 import 'package:ap_common_firebase/ap_common_firebase.dart';
 import 'package:flutter/material.dart';
 import 'package:nkust_ap/utils/global.dart';
-
-enum _State {
-  ready,
-  loading,
-  finish,
-  error,
-  empty,
-  offline,
-  custom,
-}
+import 'package:nkust_ap/utils/page_state.dart';
 
 class CalculateUnitsPage extends StatefulWidget {
   static const String routerName = '/calculateUnits';
@@ -24,7 +15,7 @@ class CalculateUnitsPageState extends State<CalculateUnitsPage>
     with SingleTickerProviderStateMixin {
   late ApLocalizations ap;
 
-  _State state = _State.ready;
+  PageState state = PageState.ready;
   String? customStateHint = '';
 
   int currentSemesterIndex = 0;
@@ -154,7 +145,7 @@ class CalculateUnitsPageState extends State<CalculateUnitsPage>
 
   Widget _body() {
     switch (state) {
-      case _State.loading:
+      case PageState.loading:
         return Container(
           alignment: Alignment.center,
           child: Column(
@@ -166,17 +157,17 @@ class CalculateUnitsPageState extends State<CalculateUnitsPage>
             ],
           ),
         );
-      case _State.error:
-      case _State.empty:
-      case _State.custom:
+      case PageState.error:
+      case PageState.empty:
+      case PageState.custom:
         return InkWell(
           onTap: _calculate,
           child: HintContent(
             icon: ApIcon.assignment,
-            content: state == _State.error ? ap.clickToRetry : customStateHint!,
+            content: state == PageState.error ? ap.clickToRetry : customStateHint!,
           ),
         );
-      case _State.ready:
+      case PageState.ready:
         return InkWell(
           onTap: _calculate,
           child: HintContent(
@@ -184,7 +175,7 @@ class CalculateUnitsPageState extends State<CalculateUnitsPage>
             content: ap.beginCalculate,
           ),
         );
-      case _State.offline:
+      case PageState.offline:
         return HintContent(
           icon: ApIcon.offlineBolt,
           content: ap.offlineMode,
@@ -288,14 +279,14 @@ class CalculateUnitsPageState extends State<CalculateUnitsPage>
 
   DioExceptionCallback get _onFailure => (DioException e) {
         setState(() {
-          state = _State.custom;
+          state = PageState.custom;
           customStateHint = e.i18nMessage;
         });
       };
 
   GeneralResponseCallback get _onError => (GeneralResponse response) {
         setState(() {
-          state = _State.custom;
+          state = PageState.custom;
           customStateHint = response.getGeneralMessage(context);
         });
       };
@@ -303,7 +294,7 @@ class CalculateUnitsPageState extends State<CalculateUnitsPage>
   Future<void> _getSemester() async {
     if (PreferenceUtil.instance.getBool(Constants.prefIsOfflineLogin, false)) {
       setState(() {
-        state = _State.offline;
+        state = PageState.offline;
       });
       return;
     }
@@ -322,7 +313,7 @@ class CalculateUnitsPageState extends State<CalculateUnitsPage>
     Helper.cancelToken!.cancel('');
     Helper.cancelToken = CancelToken();
     setState(() {
-      state = _State.loading;
+      state = PageState.loading;
     });
     if (semesterData == null) {
       _getSemester();
@@ -381,7 +372,7 @@ class CalculateUnitsPageState extends State<CalculateUnitsPage>
                 requiredUnitsTotal + electiveUnitsTotal + otherUnitsTotal;
             if (mounted) {
               setState(() {
-                state = _State.finish;
+                state = PageState.finish;
               });
             }
           }

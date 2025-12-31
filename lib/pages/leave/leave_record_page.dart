@@ -4,16 +4,8 @@ import 'package:ap_common/ap_common.dart';
 import 'package:flutter/material.dart';
 import 'package:nkust_ap/models/leave_data.dart';
 import 'package:nkust_ap/utils/global.dart';
+import 'package:nkust_ap/utils/page_state.dart';
 import 'package:nkust_ap/widgets/semester_picker.dart';
-
-enum _State {
-  loading,
-  finish,
-  error,
-  empty,
-  offlineEmpty,
-  custom,
-}
 
 class LeaveRecordPage extends StatefulWidget {
   static const String routerName = '/leave/record';
@@ -31,7 +23,7 @@ class LeaveRecordPageState extends State<LeaveRecordPage>
 
   late ApLocalizations ap;
 
-  _State state = _State.loading;
+  PageState state = PageState.loading;
   String? customStateHint = '';
 
   Orientation? orientation;
@@ -86,7 +78,7 @@ class LeaveRecordPageState extends State<LeaveRecordPage>
               onSelect: (Semester semester, int index) {
                 setState(() {
                   selectSemester = semester;
-                  state = _State.loading;
+                  state = PageState.loading;
                 });
                 if (PreferenceUtil.instance.getBool(
                   Constants.prefIsOfflineLogin,
@@ -125,35 +117,37 @@ class LeaveRecordPageState extends State<LeaveRecordPage>
 
   String? get errorTitle {
     switch (state) {
-      case _State.loading:
-      case _State.finish:
+      case PageState.loading:
+      case PageState.finish:
         return '';
-      case _State.error:
+      case PageState.error:
         return ap.somethingError;
-      case _State.empty:
+      case PageState.empty:
         return ap.leaveEmpty;
-      case _State.offlineEmpty:
+      case PageState.offlineEmpty:
         return ap.noOfflineData;
-      case _State.custom:
+      case PageState.custom:
         return customStateHint;
+      case _:
+        return '';
     }
   }
 
   Widget _body(Orientation orientation) {
     this.orientation = orientation;
     switch (state) {
-      case _State.loading:
+      case PageState.loading:
         return Container(
           alignment: Alignment.center,
           child: const CircularProgressIndicator(),
         );
-      case _State.error:
-      case _State.empty:
-      case _State.offlineEmpty:
-      case _State.custom:
+      case PageState.error:
+      case PageState.empty:
+      case PageState.offlineEmpty:
+      case PageState.custom:
         return InkWell(
           onTap: () {
-            if (state == _State.empty || state == _State.offlineEmpty) {
+            if (state == PageState.empty || state == PageState.offlineEmpty) {
               key.currentState!.pickSemester();
             } else {
               _getSemesterLeaveRecord();
@@ -329,9 +323,9 @@ class LeaveRecordPageState extends State<LeaveRecordPage>
             setState(() {
               leaveData = data;
               if (leaveData == null || leaveData!.leaves.isEmpty) {
-                state = _State.empty;
+                state = PageState.empty;
               } else {
-                state = _State.finish;
+                state = PageState.finish;
               }
             });
           }
@@ -340,7 +334,7 @@ class LeaveRecordPageState extends State<LeaveRecordPage>
         },
         onFailure: (DioException e) {
           setState(() {
-            state = _State.custom;
+            state = PageState.custom;
             customStateHint = e.i18nMessage;
           });
           if (e.hasResponse) {
@@ -354,7 +348,7 @@ class LeaveRecordPageState extends State<LeaveRecordPage>
         },
         onError: (GeneralResponse response) {
           setState(() {
-            state = _State.custom;
+            state = PageState.custom;
             customStateHint = response.getGeneralMessage(context);
           });
           _loadOfflineLeaveData();
@@ -369,9 +363,9 @@ class LeaveRecordPageState extends State<LeaveRecordPage>
       setState(() {
         isOffline = true;
         if (leaveData == null) {
-          state = _State.offlineEmpty;
+          state = PageState.offlineEmpty;
         } else {
-          state = _State.finish;
+          state = PageState.finish;
         }
       });
     }

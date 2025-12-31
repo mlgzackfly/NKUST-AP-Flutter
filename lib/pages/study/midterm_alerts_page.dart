@@ -2,17 +2,9 @@ import 'package:ap_common/ap_common.dart';
 import 'package:flutter/material.dart';
 import 'package:nkust_ap/models/midterm_alerts_data.dart';
 import 'package:nkust_ap/utils/global.dart';
+import 'package:nkust_ap/utils/page_state.dart';
 import 'package:nkust_ap/widgets/semester_picker.dart';
 import 'package:sprintf/sprintf.dart';
-
-enum _State {
-  loading,
-  finish,
-  error,
-  empty,
-  offline,
-  custom,
-}
 
 class MidtermAlertsPage extends StatefulWidget {
   static const String routerName = '/user/midtermAlerts';
@@ -26,7 +18,7 @@ class _MidtermAlertsPageState extends State<MidtermAlertsPage> {
 
   late ApLocalizations ap;
 
-  _State state = _State.loading;
+  PageState state = PageState.loading;
   String? customStateHint;
 
   late Semester selectSemester;
@@ -75,7 +67,7 @@ class _MidtermAlertsPageState extends State<MidtermAlertsPage> {
             onSelect: (Semester semester, int index) {
               setState(() {
                 selectSemester = semester;
-                state = _State.loading;
+                state = PageState.loading;
               });
               _getMidtermAlertsData();
             },
@@ -102,13 +94,13 @@ class _MidtermAlertsPageState extends State<MidtermAlertsPage> {
 
   String? get stateHint {
     switch (state) {
-      case _State.error:
+      case PageState.error:
         return ap.somethingError;
-      case _State.empty:
+      case PageState.empty:
         return ap.midtermAlertsEmpty;
-      case _State.offline:
+      case PageState.offline:
         return ap.noOfflineData;
-      case _State.custom:
+      case PageState.custom:
         return customStateHint;
       default:
         return '';
@@ -117,11 +109,11 @@ class _MidtermAlertsPageState extends State<MidtermAlertsPage> {
 
   IconData get stateIcon {
     switch (state) {
-      case _State.offline:
+      case PageState.offline:
         return ApIcon.offlineBolt;
-      case _State.error:
-      case _State.empty:
-      case _State.custom:
+      case PageState.error:
+      case PageState.empty:
+      case PageState.custom:
       default:
         return ApIcon.classIcon;
     }
@@ -129,18 +121,26 @@ class _MidtermAlertsPageState extends State<MidtermAlertsPage> {
 
   Widget _body() {
     switch (state) {
-      case _State.loading:
+      case PageState.loading:
         return Container(
           alignment: Alignment.center,
           child: const CircularProgressIndicator(),
         );
-      case _State.empty:
-      case _State.error:
-      case _State.offline:
-      case _State.custom:
+      case PageState.finish:
+        return ListView.builder(
+          itemBuilder: (_, int index) {
+            return _midtermAlertsItem(midtermAlertData.courses[index]);
+          },
+          itemCount: midtermAlertData.courses.length,
+        );
+      case PageState.empty:
+      case PageState.error:
+      case PageState.offline:
+      case PageState.custom:
+      case _:
         return InkWell(
           onTap: () {
-            if (state == _State.empty) {
+            if (state == PageState.empty) {
               key.currentState!.pickSemester();
             } else {
               _getMidtermAlertsData();
@@ -151,13 +151,6 @@ class _MidtermAlertsPageState extends State<MidtermAlertsPage> {
             icon: stateIcon,
             content: stateHint!,
           ),
-        );
-      case _State.finish:
-        return ListView.builder(
-          itemBuilder: (_, int index) {
-            return _midtermAlertsItem(midtermAlertData.courses[index]);
-          },
-          itemCount: midtermAlertData.courses.length,
         );
     }
   }
@@ -196,7 +189,7 @@ class _MidtermAlertsPageState extends State<MidtermAlertsPage> {
   Future<void> _getMidtermAlertsData() async {
     if (PreferenceUtil.instance.getBool(Constants.prefIsOfflineLogin, false)) {
       setState(() {
-        state = _State.offline;
+        state = PageState.offline;
       });
       return;
     }
@@ -210,16 +203,16 @@ class _MidtermAlertsPageState extends State<MidtermAlertsPage> {
             setState(() {
               midtermAlertData = data;
               if (data.courses.isEmpty) {
-                state = _State.empty;
+                state = PageState.empty;
               } else {
-                state = _State.finish;
+                state = PageState.finish;
               }
             });
           }
         },
         onFailure: (DioException e) {
           setState(() {
-            state = _State.custom;
+            state = PageState.custom;
             customStateHint = e.i18nMessage;
           });
           if (e.hasResponse) {
@@ -232,7 +225,7 @@ class _MidtermAlertsPageState extends State<MidtermAlertsPage> {
         },
         onError: (GeneralResponse response) {
           setState(() {
-            state = _State.custom;
+            state = PageState.custom;
             customStateHint = response.getGeneralMessage(context);
           });
         },

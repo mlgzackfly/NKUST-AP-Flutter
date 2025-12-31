@@ -11,16 +11,8 @@ import 'package:nkust_ap/models/leave_submit_data.dart';
 import 'package:nkust_ap/models/leave_submit_info_data.dart';
 import 'package:nkust_ap/pages/leave/pick_tutor_page.dart';
 import 'package:nkust_ap/utils/global.dart';
+import 'package:nkust_ap/utils/page_state.dart';
 import 'package:sprintf/sprintf.dart';
-
-enum _State {
-  loading,
-  finish,
-  error,
-  userNotSupport,
-  offline,
-  custom,
-}
 
 enum Leave { normal, sick, official, funeral, maternity }
 
@@ -38,7 +30,7 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
 
   late ApLocalizations ap;
 
-  _State state = _State.loading;
+  PageState state = PageState.loading;
   String? customStateHint;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -61,17 +53,19 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
 
   String? get errorTitle {
     switch (state) {
-      case _State.loading:
-      case _State.finish:
+      case PageState.loading:
+      case PageState.finish:
         return '';
-      case _State.error:
+      case PageState.error:
         return ap.somethingError;
-      case _State.userNotSupport:
+      case PageState.userNotSupport:
         return ap.userNotSupport;
-      case _State.offline:
+      case PageState.offline:
         return ap.offlineMode;
-      case _State.custom:
+      case PageState.custom:
         return customStateHint;
+      case _:
+        return '';
     }
   }
 
@@ -97,26 +91,28 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
 
   Widget? _body() {
     switch (state) {
-      case _State.loading:
+      case PageState.loading:
         return Container(
           alignment: Alignment.center,
           child: const CircularProgressIndicator(),
         );
-      case _State.error:
-      case _State.offline:
-      case _State.userNotSupport:
-      case _State.custom:
+      case PageState.error:
+      case PageState.offline:
+      case PageState.userNotSupport:
+      case PageState.custom:
         return InkWell(
           onTap: _getLeavesInfo,
           child: HintContent(
-            icon: state == _State.offline
+            icon: state == PageState.offline
                 ? ApIcon.offlineBolt
                 : ApIcon.permIdentity,
             content: errorTitle!,
           ),
         );
-      case _State.finish:
+      case PageState.finish:
         return _content();
+      case _:
+        return null;
     }
   }
 
@@ -546,7 +542,7 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
         onSuccess: (LeaveSubmitInfoData data) {
           setState(() {
             leaveSubmitInfo = data;
-            state = _State.finish;
+            state = PageState.finish;
           });
         },
         onFailure: (DioException e) {
@@ -555,9 +551,9 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
               case DioExceptionType.badResponse:
                 setState(() {
                   if (e.response!.statusCode == 403) {
-                    state = _State.userNotSupport;
+                    state = PageState.userNotSupport;
                   } else {
-                    state = _State.custom;
+                    state = PageState.custom;
                     customStateHint = e.message;
                     AnalyticsUtil.instance.logApiEvent(
                       'getLeaveSubmitInfo',
@@ -567,12 +563,12 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
                   }
                 });
               case DioExceptionType.unknown:
-                setState(() => state = _State.error);
+                setState(() => state = PageState.error);
               case DioExceptionType.cancel:
                 break;
               default:
                 setState(() {
-                  state = _State.custom;
+                  state = PageState.custom;
                   customStateHint = e.i18nMessage;
                 });
             }
@@ -581,7 +577,7 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
         },
         onError: (GeneralResponse response) {
           setState(() {
-            state = _State.custom;
+            state = PageState.custom;
             customStateHint = response.getGeneralMessage(context);
           });
           AnalyticsUtil.instance.logEvent('get_submit_submit_fail');

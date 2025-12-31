@@ -4,17 +4,8 @@ import 'package:nkust_ap/api/helper.dart';
 import 'package:nkust_ap/config/constants.dart';
 import 'package:nkust_ap/models/bus_violation_records_data.dart';
 import 'package:nkust_ap/utils/app_localizations.dart';
+import 'package:nkust_ap/utils/page_state.dart';
 import 'package:nkust_ap/widgets/share_data_widget.dart';
-
-enum _State {
-  loading,
-  finish,
-  error,
-  empty,
-  campusNotSupport,
-  userNotSupport,
-  custom
-}
 
 class BusViolationRecordsPage extends StatefulWidget {
   @override
@@ -26,7 +17,7 @@ class _BusViolationRecordsPageState extends State<BusViolationRecordsPage> {
   late AppLocalizations app;
   late ApLocalizations ap;
 
-  _State state = _State.loading;
+  PageState state = PageState.loading;
 
   String? customStateHint = '';
 
@@ -34,15 +25,15 @@ class _BusViolationRecordsPageState extends State<BusViolationRecordsPage> {
 
   String? get errorText {
     switch (state) {
-      case _State.error:
+      case PageState.error:
         return ap.clickToRetry;
-      case _State.empty:
+      case PageState.empty:
         return app.busViolationRecordEmpty;
-      case _State.campusNotSupport:
+      case PageState.campusNotSupport:
         return ap.campusNotSupport;
-      case _State.userNotSupport:
+      case PageState.userNotSupport:
         return ap.userNotSupport;
-      case _State.custom:
+      case PageState.custom:
         return customStateHint;
       default:
         return ap.somethingError;
@@ -60,15 +51,15 @@ class _BusViolationRecordsPageState extends State<BusViolationRecordsPage> {
     app = AppLocalizations.of(context);
     ap = ApLocalizations.of(context);
     switch (state) {
-      case _State.loading:
+      case PageState.loading:
         return const Center(
           child: CircularProgressIndicator(),
         );
-      case _State.error:
-      case _State.empty:
-      case _State.campusNotSupport:
-      case _State.userNotSupport:
-      case _State.custom:
+      case PageState.error:
+      case PageState.empty:
+      case PageState.campusNotSupport:
+      case PageState.userNotSupport:
+      case PageState.custom:
         return InkWell(
           onTap: () {
             getBusViolationRecords();
@@ -219,9 +210,9 @@ class _BusViolationRecordsPageState extends State<BusViolationRecordsPage> {
             setState(() {
               if (violationData == null ||
                   violationData!.reservations.isEmpty) {
-                state = _State.empty;
+                state = PageState.empty;
               } else {
-                state = _State.finish;
+                state = PageState.finish;
               }
               ShareDataWidget.of(context)!.data.hasBusViolationRecords =
                   data.hasBusViolationRecords;
@@ -244,11 +235,11 @@ class _BusViolationRecordsPageState extends State<BusViolationRecordsPage> {
               case DioExceptionType.badResponse:
                 setState(() {
                   if (e.response!.statusCode == 401) {
-                    state = _State.userNotSupport;
+                    state = PageState.userNotSupport;
                   } else if (e.response!.statusCode == 403) {
-                    state = _State.campusNotSupport;
+                    state = PageState.campusNotSupport;
                   } else {
-                    state = _State.custom;
+                    state = PageState.custom;
                     customStateHint = e.message;
                     AnalyticsUtil.instance.logApiEvent(
                       'getBusViolationRecords',
@@ -267,17 +258,17 @@ class _BusViolationRecordsPageState extends State<BusViolationRecordsPage> {
               case DioExceptionType.unknown:
                 setState(() {
                   if (e.message?.contains('HttpException') ?? false) {
-                    state = _State.custom;
+                    state = PageState.custom;
                     customStateHint = app.busFailInfinity;
                   } else {
-                    state = _State.error;
+                    state = PageState.error;
                   }
                 });
               case DioExceptionType.cancel:
                 break;
               default:
                 setState(() {
-                  state = _State.custom;
+                  state = PageState.custom;
                   customStateHint = e.i18nMessage;
                 });
             }
@@ -285,7 +276,7 @@ class _BusViolationRecordsPageState extends State<BusViolationRecordsPage> {
         },
         onError: (GeneralResponse response) {
           setState(() {
-            state = _State.custom;
+            state = PageState.custom;
             customStateHint = response.getGeneralMessage(context);
           });
         },

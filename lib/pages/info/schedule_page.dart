@@ -9,9 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:nkust_ap/models/schedule_data.dart';
 import 'package:nkust_ap/res/assets.dart';
 import 'package:nkust_ap/utils/global.dart';
+import 'package:nkust_ap/utils/page_state.dart';
 import 'package:sprintf/sprintf.dart';
-
-enum _State { loading, finish, error, empty, pdf }
 
 class SchedulePage extends StatefulWidget {
   static const String routerName = '/info/schedule';
@@ -29,7 +28,7 @@ class SchedulePageState extends State<SchedulePage>
 
   List<ScheduleData> scheduleDataList = <ScheduleData>[];
 
-  _State state = _State.loading;
+  PageState state = PageState.loading;
 
   int page = 1;
 
@@ -68,34 +67,35 @@ class SchedulePageState extends State<SchedulePage>
 
   Widget _body() {
     switch (state) {
-      case _State.loading:
+      case PageState.loading:
         return Container(
           alignment: Alignment.center,
           child: const CircularProgressIndicator(),
         );
-      case _State.error:
-      case _State.empty:
-        return InkWell(
-          onTap: _getSchedules,
-          child: HintContent(
-            icon: ApIcon.assignment,
-            content: state == _State.error
-                ? ap.clickToRetry
-                : AppLocalizations.of(context).busEmpty,
-          ),
-        );
-      case _State.pdf:
+      case PageState.pdf:
         return PdfView(
           state: pdfState,
           data: data,
           onRefresh: _getSchedules,
         );
-      case _State.finish:
+      case PageState.finish:
         return CustomScrollView(
           slivers: <Widget>[
             for (final ScheduleData value in scheduleDataList)
               ..._scheduleItem(value),
           ],
+        );
+      case PageState.error:
+      case PageState.empty:
+      case _:
+        return InkWell(
+          onTap: _getSchedules,
+          child: HintContent(
+            icon: ApIcon.assignment,
+            content: state == PageState.error
+                ? ap.clickToRetry
+                : AppLocalizations.of(context).busEmpty,
+          ),
         );
     }
   }
@@ -283,14 +283,14 @@ class SchedulePageState extends State<SchedulePage>
         options: Options(responseType: ResponseType.bytes),
       );
       setState(() {
-        state = _State.pdf;
+        state = PageState.pdf;
         pdfState = PdfState.finish;
         data = response.data;
       });
     } catch (e) {
       setState(() {
         pdfState = PdfState.error;
-        state = _State.finish;
+        state = PageState.finish;
       });
     }
   }

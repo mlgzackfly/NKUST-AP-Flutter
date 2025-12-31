@@ -9,8 +9,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:nkust_ap/models/leave_campus_data.dart';
 import 'package:nkust_ap/res/assets.dart';
 import 'package:nkust_ap/utils/global.dart';
-
-enum _State { loading, finish, error, empty }
+import 'package:nkust_ap/utils/page_state.dart';
 
 enum _Type { campus, department, teacher }
 
@@ -22,7 +21,7 @@ class PickTutorPage extends StatefulWidget {
 class _PickTutorPageState extends State<PickTutorPage> {
   late ApLocalizations ap;
 
-  _State state = _State.loading;
+  PageState state = PageState.loading;
 
   LeavesCampusData? leavesCampusData;
 
@@ -53,18 +52,18 @@ class _PickTutorPageState extends State<PickTutorPage> {
 
   Widget _body() {
     switch (state) {
-      case _State.loading:
+      case PageState.loading:
         return Container(
           alignment: Alignment.center,
           child: const CircularProgressIndicator(),
         );
-      case _State.error:
-      case _State.empty:
+      case PageState.error:
+      case PageState.empty:
         return InkWell(
           child: HintContent(
             icon: ApIcon.permIdentity,
             content:
-                state == _State.error ? ap.functionNotOpen : ap.functionNotOpen,
+                state == PageState.error ? ap.functionNotOpen : ap.functionNotOpen,
           ),
         );
       default:
@@ -197,9 +196,9 @@ class _PickTutorPageState extends State<PickTutorPage> {
     setState(() {
       leavesCampusData = LeavesCampusData.fromRawJson(text);
       if (leavesCampusData != null) {
-        state = _State.finish;
+        state = PageState.finish;
       } else {
-        state = _State.empty;
+        state = PageState.empty;
       }
     });
     log(

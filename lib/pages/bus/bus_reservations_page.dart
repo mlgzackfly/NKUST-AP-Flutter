@@ -3,17 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:nkust_ap/models/cancel_bus_data.dart';
 import 'package:nkust_ap/models/models.dart';
 import 'package:nkust_ap/utils/global.dart';
-
-enum _State {
-  loading,
-  finish,
-  error,
-  empty,
-  campusNotSupport,
-  userNotSupport,
-  offlineEmpty,
-  custom
-}
+import 'package:nkust_ap/utils/page_state.dart';
 
 class BusReservationsPage extends StatefulWidget {
   static const String routerName = '/bus/reservations';
@@ -27,7 +17,7 @@ class BusReservationsPageState extends State<BusReservationsPage>
   @override
   bool get wantKeepAlive => true;
 
-  _State state = _State.finish;
+  PageState state = PageState.finish;
   String? customStateHint;
 
   BusReservationsData? busReservationsData;
@@ -76,15 +66,15 @@ class BusReservationsPageState extends State<BusReservationsPage>
 
   String? get errorText {
     switch (state) {
-      case _State.error:
+      case PageState.error:
         return ap.clickToRetry;
-      case _State.empty:
+      case PageState.empty:
         return app!.busReservationEmpty;
-      case _State.campusNotSupport:
+      case PageState.campusNotSupport:
         return ap.campusNotSupport;
-      case _State.userNotSupport:
+      case PageState.userNotSupport:
         return ap.userNotSupport;
-      case _State.custom:
+      case PageState.custom:
         return customStateHint;
       default:
         return ap.somethingError;
@@ -93,15 +83,15 @@ class BusReservationsPageState extends State<BusReservationsPage>
 
   Widget _body() {
     switch (state) {
-      case _State.loading:
+      case PageState.loading:
         return const Center(
           child: CircularProgressIndicator(),
         );
-      case _State.error:
-      case _State.empty:
-      case _State.campusNotSupport:
-      case _State.userNotSupport:
-      case _State.custom:
+      case PageState.error:
+      case PageState.empty:
+      case PageState.campusNotSupport:
+      case PageState.userNotSupport:
+      case PageState.custom:
         return InkWell(
           onTap: () {
             _getBusReservations();
@@ -112,7 +102,7 @@ class BusReservationsPageState extends State<BusReservationsPage>
             content: errorText!,
           ),
         );
-      case _State.offlineEmpty:
+      case PageState.offlineEmpty:
         return HintContent(
           icon: ApIcon.assignment,
           content: ap.noOfflineData,
@@ -209,11 +199,11 @@ class BusReservationsPageState extends State<BusReservationsPage>
         setState(() {
           isOffline = true;
           if (busReservationsData == null) {
-            state = _State.offlineEmpty;
+            state = PageState.offlineEmpty;
           } else if (busReservationsData!.reservations.isNotEmpty) {
-            state = _State.finish;
+            state = PageState.finish;
           } else {
-            state = _State.empty;
+            state = PageState.empty;
           }
         });
       }
@@ -221,7 +211,7 @@ class BusReservationsPageState extends State<BusReservationsPage>
     }
     if (mounted) {
       setState(() {
-        state = _State.loading;
+        state = PageState.loading;
       });
     }
     Helper.instance.getBusReservations(
@@ -232,9 +222,9 @@ class BusReservationsPageState extends State<BusReservationsPage>
             setState(() {
               if (busReservationsData == null ||
                   busReservationsData!.reservations.isEmpty) {
-                state = _State.empty;
+                state = PageState.empty;
               } else {
-                state = _State.finish;
+                state = PageState.finish;
               }
             });
           }
@@ -250,11 +240,11 @@ class BusReservationsPageState extends State<BusReservationsPage>
               case DioExceptionType.badResponse:
                 setState(() {
                   if (e.response!.statusCode == 401) {
-                    state = _State.userNotSupport;
+                    state = PageState.userNotSupport;
                   } else if (e.response!.statusCode == 403) {
-                    state = _State.campusNotSupport;
+                    state = PageState.campusNotSupport;
                   } else {
-                    state = _State.custom;
+                    state = PageState.custom;
                     customStateHint = e.message;
                     AnalyticsUtil.instance.logApiEvent(
                       'getBusReservations',
@@ -273,17 +263,17 @@ class BusReservationsPageState extends State<BusReservationsPage>
               case DioExceptionType.unknown:
                 setState(() {
                   if (e.message?.contains('HttpException') ?? false) {
-                    state = _State.custom;
+                    state = PageState.custom;
                     customStateHint = app!.busFailInfinity;
                   } else {
-                    state = _State.error;
+                    state = PageState.error;
                   }
                 });
               case DioExceptionType.cancel:
                 break;
               default:
                 setState(() {
-                  state = _State.custom;
+                  state = PageState.custom;
                   customStateHint = e.i18nMessage;
                 });
             }
@@ -293,7 +283,7 @@ class BusReservationsPageState extends State<BusReservationsPage>
         onError: (GeneralResponse response) {
           if (mounted) {
             setState(() {
-              state = _State.custom;
+              state = PageState.custom;
               customStateHint = response.getGeneralMessage(context);
             });
           }
@@ -406,11 +396,11 @@ class BusReservationsPageState extends State<BusReservationsPage>
       setState(() {
         isOffline = true;
         if (busReservationsData == null) {
-          state = _State.offlineEmpty;
+          state = PageState.offlineEmpty;
         } else if (busReservationsData!.reservations.isNotEmpty) {
-          state = _State.finish;
+          state = PageState.finish;
         } else {
-          state = _State.empty;
+          state = PageState.empty;
         }
       });
     }

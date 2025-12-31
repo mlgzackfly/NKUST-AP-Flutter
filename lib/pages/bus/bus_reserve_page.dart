@@ -6,18 +6,8 @@ import 'package:nkust_ap/models/cancel_bus_data.dart';
 import 'package:nkust_ap/models/error_response.dart';
 import 'package:nkust_ap/models/models.dart';
 import 'package:nkust_ap/utils/global.dart';
+import 'package:nkust_ap/utils/page_state.dart';
 import 'package:nkust_ap/widgets/flutter_calendar.dart';
-
-enum _State {
-  loading,
-  finish,
-  error,
-  empty,
-  campusNotSupport,
-  userNotSupport,
-  offline,
-  custom
-}
 
 enum Station { janGong, yanchao, first }
 
@@ -36,7 +26,7 @@ class BusReservePageState extends State<BusReservePage>
   AppLocalizations? app;
   late ApLocalizations ap;
 
-  _State state = _State.finish;
+  PageState state = PageState.finish;
 
   String? customStateHint = '';
 
@@ -170,15 +160,15 @@ class BusReservePageState extends State<BusReservePage>
 
   String? get errorText {
     switch (state) {
-      case _State.error:
+      case PageState.error:
         return ap.clickToRetry;
-      case _State.empty:
+      case PageState.empty:
         return app!.busEmpty;
-      case _State.campusNotSupport:
+      case PageState.campusNotSupport:
         return ap.campusNotSupport;
-      case _State.userNotSupport:
+      case PageState.userNotSupport:
         return ap.userNotSupport;
-      case _State.custom:
+      case PageState.custom:
         return customStateHint;
       default:
         return ap.somethingError;
@@ -187,16 +177,16 @@ class BusReservePageState extends State<BusReservePage>
 
   Widget _body() {
     switch (state) {
-      case _State.loading:
+      case PageState.loading:
         return Container(
           alignment: Alignment.center,
           child: const CircularProgressIndicator(),
         );
-      case _State.error:
-      case _State.empty:
-      case _State.campusNotSupport:
-      case _State.userNotSupport:
-      case _State.custom:
+      case PageState.error:
+      case PageState.empty:
+      case PageState.campusNotSupport:
+      case PageState.userNotSupport:
+      case PageState.custom:
         return InkWell(
           onTap: () {
             _getBusTimeTables();
@@ -207,7 +197,7 @@ class BusReservePageState extends State<BusReservePage>
             content: errorText!,
           ),
         );
-      case _State.offline:
+      case PageState.offline:
         return HintContent(
           icon: ApIcon.offlineBolt,
           content: ap.offlineMode,
@@ -318,13 +308,13 @@ class BusReservePageState extends State<BusReservePage>
   Future<void> _getBusTimeTables() async {
     if (PreferenceUtil.instance.getBool(Constants.prefIsOfflineLogin, false)) {
       setState(() {
-        state = _State.offline;
+        state = PageState.offline;
       });
       return;
     }
     Helper.cancelToken!.cancel('');
     Helper.cancelToken = CancelToken();
-    if (mounted) setState(() => state = _State.loading);
+    if (mounted) setState(() => state = PageState.loading);
     Helper.instance.getBusTimeTables(
       dateTime: dateTime,
       callback: GeneralCallback<BusData>(
@@ -333,9 +323,9 @@ class BusReservePageState extends State<BusReservePage>
           if (mounted) {
             setState(() {
               if (busData == null || busData!.timetable.isEmpty) {
-                state = _State.empty;
+                state = PageState.empty;
               } else {
-                state = _State.finish;
+                state = PageState.finish;
               }
             });
           }
@@ -350,11 +340,11 @@ class BusReservePageState extends State<BusReservePage>
               case DioExceptionType.badResponse:
                 setState(() {
                   if (e.response!.statusCode == 401) {
-                    state = _State.userNotSupport;
+                    state = PageState.userNotSupport;
                   } else if (e.response!.statusCode == 403) {
-                    state = _State.campusNotSupport;
+                    state = PageState.campusNotSupport;
                   } else {
-                    state = _State.custom;
+                    state = PageState.custom;
                     customStateHint = e.message;
                     AnalyticsUtil.instance.logApiEvent(
                       'getBusTimeTables',
@@ -373,17 +363,17 @@ class BusReservePageState extends State<BusReservePage>
               case DioExceptionType.unknown:
                 setState(() {
                   if (e.message?.contains('HttpException') ?? false) {
-                    state = _State.custom;
+                    state = PageState.custom;
                     customStateHint = app!.busFailInfinity;
                   } else {
-                    state = _State.error;
+                    state = PageState.error;
                   }
                 });
               case DioExceptionType.cancel:
                 break;
               default:
                 setState(() {
-                  state = _State.custom;
+                  state = PageState.custom;
                   customStateHint = e.i18nMessage;
                 });
             }
@@ -391,7 +381,7 @@ class BusReservePageState extends State<BusReservePage>
         },
         onError: (GeneralResponse response) {
           setState(() {
-            state = _State.custom;
+            state = PageState.custom;
             if (response.statusCode == 403) {
               customStateHint = response.message;
             } else {
