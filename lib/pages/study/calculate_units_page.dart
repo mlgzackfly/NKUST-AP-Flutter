@@ -164,7 +164,9 @@ class CalculateUnitsPageState extends State<CalculateUnitsPage>
           onTap: _calculate,
           child: HintContent(
             icon: ApIcon.assignment,
-            content: state == PageState.error ? ap.clickToRetry : customStateHint!,
+            content: state == PageState.error
+                ? ap.clickToRetry
+                : customStateHint!,
           ),
         );
       case PageState.ready:

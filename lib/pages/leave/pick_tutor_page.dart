@@ -62,8 +62,7 @@ class _PickTutorPageState extends State<PickTutorPage> {
         return InkWell(
           child: HintContent(
             icon: ApIcon.permIdentity,
-            content:
-                state == PageState.error ? ap.functionNotOpen : ap.functionNotOpen,
+            content: ap.functionNotOpen,
           ),
         );
       default:

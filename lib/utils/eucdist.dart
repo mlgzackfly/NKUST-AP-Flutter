@@ -294,7 +294,8 @@ List<Matrix<int>?> cropImage(
 ///
 /// Parameters:
 /// - [a]: A 2D binary matrix.
-/// - [structure]: A 2D matrix defining the connectivity. If null, defaults to 4-connectivity.
+/// - [structure]: A 2D matrix defining the connectivity.
+///   If null, defaults to 4-connectivity.
 /// - [background]: The pixel value representing the background. Defaults to 0.
 ///
 /// Returns:

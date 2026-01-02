@@ -87,10 +87,6 @@ class SemesterPickerState extends State<SemesterPicker> {
         onSuccess: (SemesterData data) {
           semesterData = data;
           data.save();
-          final String _ = PreferenceUtil.instance.getString(
-            ApConstants.currentSemesterCode,
-            ApConstants.semesterLatest,
-          );
           final String newSemester =
               '${Helper.username}_${data.defaultSemester.code}';
           PreferenceUtil.instance.setString(
