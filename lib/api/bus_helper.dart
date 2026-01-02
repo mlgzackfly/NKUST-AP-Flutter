@@ -210,7 +210,7 @@ class BusHelper {
     302: Wrong password.
     */
     if (Helper.username == null || Helper.password == null) {
-      throw 'NullThrownError';
+      throw StateError('Retry limit exceeded');
     }
 
     await loginPrepare();
@@ -241,7 +241,7 @@ class BusHelper {
     required String day,
   }) async {
     if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw 'NullThrownError';
+      throw StateError('Retry limit exceeded');
     }
 
     if (!isLogin) {
@@ -312,7 +312,7 @@ class BusHelper {
 
   Future<BookingBusData> busBook({required String busId}) async {
     if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw 'NullThrownError';
+      throw StateError('Retry limit exceeded');
     }
 
     if (!isLogin) {
@@ -342,7 +342,7 @@ class BusHelper {
 
   Future<CancelBusData> busUnBook({required String busId}) async {
     if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw 'NullThrownError';
+      throw StateError('Retry limit exceeded');
     }
 
     if (!isLogin) {
@@ -371,7 +371,7 @@ class BusHelper {
 
   Future<BusReservationsData> busReservations() async {
     if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw 'NullThrownError';
+      throw StateError('Retry limit exceeded');
     }
 
     if (!isLogin) {
@@ -421,7 +421,7 @@ class BusHelper {
 
   Future<BusViolationRecordsData> busViolationRecords() async {
     if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw 'NullThrownError';
+      throw StateError('Retry limit exceeded');
     }
 
     if (!isLogin) {

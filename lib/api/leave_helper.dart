@@ -164,10 +164,10 @@ class LeaveHelper {
 
   Future<LeaveData> getLeaves({String? year, String? semester}) async {
     if (Helper.username == null || Helper.password == null) {
-      throw 'NullThrownError';
+      throw StateError('Retry limit exceeded');
     }
     if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw 'NullThrownError';
+      throw StateError('Retry limit exceeded');
     }
     if (!(isLogin ?? false)) {
       await WebApHelper.instance.loginToLeave();
@@ -195,10 +195,10 @@ class LeaveHelper {
 
   Future<LeaveSubmitInfoData> getLeavesSubmitInfo() async {
     if (Helper.username == null || Helper.password == null) {
-      throw 'NullThrownError';
+      throw StateError('Retry limit exceeded');
     }
     if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw 'NullThrownError';
+      throw StateError('Retry limit exceeded');
     }
     if (!(isLogin ?? false)) {
       await WebApHelper.instance.loginToLeave();

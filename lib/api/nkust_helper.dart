@@ -167,7 +167,7 @@ class NKUSTHelper {
   Future<NotificationsData> getNotifications(int page) async {
     final int baseIndex = (page - 1) * 15;
     if (reTryCounts > reTryCountsLimit) {
-      throw 'NullThrownError';
+      throw StateError('Retry limit exceeded');
     }
     final Response<String> res = await dio.post<String>(
       ApiEndpoints.getAcadUrl(ApiEndpoints.acadNotifications),
