@@ -1,9 +1,6 @@
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:ap_common/ap_common.dart';
-import 'package:cookie_jar/cookie_jar.dart';
-import 'package:dio/io.dart';
 import 'package:flutter/material.dart';
 import 'package:html/dom.dart' as html;
 import 'package:html/parser.dart' show parse;
@@ -11,19 +8,19 @@ import 'package:http_parser/http_parser.dart';
 import 'package:nkust_ap/api/ap_helper.dart';
 import 'package:nkust_ap/api/ap_status_code.dart';
 import 'package:nkust_ap/api/api_endpoints.dart';
+import 'package:nkust_ap/api/base_api_helper.dart';
 import 'package:nkust_ap/api/helper.dart';
+import 'package:nkust_ap/api/mixins/cookie_manageable.dart';
 import 'package:nkust_ap/api/parser/leave_parser.dart';
-import 'package:nkust_ap/config/constants.dart';
 import 'package:nkust_ap/models/leave_data.dart';
 import 'package:nkust_ap/models/leave_submit_data.dart';
 import 'package:nkust_ap/models/leave_submit_info_data.dart';
 import 'package:nkust_ap/models/login_response.dart';
-import 'package:nkust_ap/models/mobile_cookies_data.dart';
 import 'package:nkust_ap/pages/leave_nkust_page.dart';
 
-class LeaveHelper {
+class LeaveHelper extends BaseApiHelper with CookieManageable {
   LeaveHelper() {
-    dioInit();
+    _initDio();
   }
 
   static String get basePath => ApiEndpoints.leaveBaseUrl;
@@ -42,82 +39,29 @@ class LeaveHelper {
 
   bool? isLogin;
 
-  late Dio dio;
-  late CookieJar cookieJar;
+  @override
+  String get baseUrl => ApiEndpoints.leaveBaseUrl;
 
-  MobileCookiesData? cookiesData;
-
-  void setProxy(String proxyIP) {
-    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final HttpClient client = HttpClient();
-      client.findProxy = (Uri uri) {
-        return 'PROXY $proxyIP';
+  @override
+  Map<String, dynamic> get additionalHeaders => <String, dynamic>{
+        'Origin': 'http://${ApiEndpoints.leaveHost}',
+        'Upgrade-Insecure-Requests': '1',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept':
+            'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Referer': ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveLogon),
+        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6',
       };
-      return client;
-    };
-  }
 
-  void dioInit() {
-    // Use PrivateCookieManager to overwrite origin CookieManager, because
-    // Cookie name of the NKUST ap system not follow the RFC6265. :(
-    dio = Dio();
-    dio.interceptors.add(PrivateCookieManager(WebApHelper.instance.cookieJar));
-    dio.options.headers['user-agent'] =
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36';
-
-    dio.options.headers.addAll(<String, String>{
-      'Origin': 'http://${ApiEndpoints.leaveHost}',
-      'Upgrade-Insecure-Requests': '1',
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Accept':
-          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-      'Referer': ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveLogon),
-      'Accept-Encoding': 'gzip, deflate',
-      'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6',
-    });
-
-    dio.options.headers['Connection'] = 'close';
-    dio.options.connectTimeout = const Duration(
-      milliseconds: Constants.timeoutMs,
-    );
-    dio.options.receiveTimeout = const Duration(
-      milliseconds: Constants.timeoutMs,
-    );
-  }
-
-  void setCookieFromData(MobileCookiesData data) {
-    cookiesData = data;
-    for (final MobileCookies element in data.cookies) {
-      final Cookie tempCookie = Cookie(element.name, element.value);
-      tempCookie.domain = element.domain;
-      cookieJar.saveFromResponse(
-        Uri.parse(element.path),
-        <Cookie>[tempCookie],
-      );
-    }
-  }
-
-  void setCookie(
-    String url, {
-    required String cookieName,
-    required String cookieValue,
-    String? cookieDomain,
-  }) {
-    final Cookie tempCookie = Cookie(cookieName, cookieValue);
-    tempCookie.domain = cookieDomain;
-    cookieJar.saveFromResponse(
-      Uri.parse(url),
-      <Cookie>[tempCookie],
-    );
-  }
-
-  Future<bool> isCookieAlive() async {
-    try {
-      // FIXME: Implement proper cookie expiration check
-      final Response<dynamic> res = await dio.get('');
-      return res.data == 'alive';
-    } catch (_) {}
-    return false;
+  /// LeaveHelper shares cookie jar with WebApHelper for SSO support.
+  void _initDio() {
+    dioInit();
+    // Override to use WebApHelper's cookie jar for SSO
+    cookieJar = WebApHelper.instance.cookieJar;
+    dio.interceptors.clear();
+    dio.interceptors.add(PrivateCookieManager(cookieJar));
+    dio.options.headers.addAll(additionalHeaders);
   }
 
   Future<LoginResponse> login({

@@ -1,32 +1,25 @@
 import 'dart:developer';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:ap_common/ap_common.dart';
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:dio/io.dart';
 import 'package:dio_http_cache/dio_http_cache.dart';
-import 'package:native_dio_adapter/native_dio_adapter.dart';
 import 'package:nkust_ap/api/ap_status_code.dart';
 import 'package:nkust_ap/api/api_endpoints.dart';
+import 'package:nkust_ap/api/base_api_helper.dart';
 import 'package:nkust_ap/api/helper.dart';
 import 'package:nkust_ap/api/leave_helper.dart';
 import 'package:nkust_ap/api/mobile_nkust_helper.dart';
 import 'package:nkust_ap/api/parser/ap_parser.dart';
 import 'package:nkust_ap/api/parser/api_tool.dart';
-import 'package:nkust_ap/config/constants.dart';
 import 'package:nkust_ap/models/login_response.dart';
 import 'package:nkust_ap/models/midterm_alerts_data.dart';
 import 'package:nkust_ap/models/reward_and_penalty_data.dart';
 import 'package:nkust_ap/models/room_data.dart';
 import 'package:nkust_ap/utils/captcha_utils.dart';
 
-class WebApHelper {
+class WebApHelper extends BaseApiHelper {
   static WebApHelper? _instance;
-
-  late Dio dio;
-  late DioCacheManager _manager;
-  late CookieJar cookieJar;
 
   static int reLoginReTryCountsLimit = 3;
   static int reLoginReTryCounts = 0;
@@ -34,6 +27,9 @@ class WebApHelper {
   bool isLogin = false;
 
   String? pictureUrl;
+
+  @override
+  String get baseUrl => ApiEndpoints.webApBaseUrl;
 
   //cache key name
   static String get semesterCacheKey => 'semesterCacheKey';
@@ -54,46 +50,10 @@ class WebApHelper {
     dioInit();
   }
 
-  void setProxy(String proxyIP) {
-    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final HttpClient client = HttpClient();
-      client.findProxy = (Uri uri) {
-        return 'PROXY $proxyIP';
-      };
-      return client;
-    };
-  }
-
   Future<void> logout() async {
     try {
       await dio.post(ApiEndpoints.getWebApUrl(ApiEndpoints.webApLogout));
     } catch (_) {}
-  }
-
-  void dioInit() {
-    // Use PrivateCookieManager to overwrite origin CookieManager, because
-    // Cookie name of the NKUST ap system not follow the RFC6265. :(
-    dio = Dio();
-    cookieJar = CookieJar();
-    if (Helper.isSupportCacheData) {
-      _manager = DioCacheManager(
-        CacheConfig(baseUrl: ApiEndpoints.webApBaseUrl),
-      );
-      dio.interceptors.add(_manager.interceptor as Interceptor);
-    }
-    dio.interceptors.add(PrivateCookieManager(cookieJar));
-    dio.options.headers['user-agent'] =
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36';
-    dio.options.headers['Connection'] = 'close';
-    dio.options.connectTimeout = const Duration(
-      milliseconds: Constants.timeoutMs,
-    );
-    dio.options.receiveTimeout = const Duration(
-      milliseconds: Constants.timeoutMs,
-    );
-    if (Platform.isIOS || Platform.isMacOS || Platform.isAndroid) {
-      dio.httpClientAdapter = NativeAdapter();
-    }
   }
 
   Future<Uint8List?> getValidationImage() async {
@@ -462,7 +422,7 @@ class WebApHelper {
     }
 
     if (WebApParser.instance.apLoginParser(request.data) == 2) {
-      if (Helper.isSupportCacheData) _manager.delete(cacheKey!);
+      if (Helper.isSupportCacheData) cacheManager?.delete(cacheKey!);
       reLoginReTryCounts += 1;
       await login(username: Helper.username!, password: Helper.password!);
       return apQuery(queryQid, queryData, bytesResponse: bytesResponse);
@@ -490,7 +450,7 @@ class WebApHelper {
     final Map<String, dynamic> parsedData =
         WebApParser.instance.apUserInfoParser(query.data as String);
     if (parsedData['id'] == null) {
-      _manager.delete(userInfoCacheKey);
+      cacheManager?.delete(userInfoCacheKey);
     }
     final UserInfo data = UserInfo.fromJson(
       WebApParser.instance.apUserInfoParser(query.data as String),
@@ -528,7 +488,7 @@ class WebApHelper {
         WebApParser.instance.semestersParser(query.data as String);
     if ((parsedData['data'] as List<dynamic>).isEmpty) {
       //data error delete cache
-      _manager.delete(semesterCacheKey);
+      cacheManager?.delete(semesterCacheKey);
     }
 
     return SemesterData.fromJson(parsedData);
@@ -577,7 +537,7 @@ class WebApHelper {
     final Map<String, dynamic> parsedData =
         WebApParser.instance.scoresParser(query.data as String);
     if ((parsedData['scores'] as List<dynamic>).isEmpty) {
-      _manager.delete('${scoresCacheKey}_${years}_$semesterValue');
+      cacheManager?.delete('${scoresCacheKey}_${years}_$semesterValue');
     }
 
     return ScoreData.fromJson(
@@ -612,7 +572,7 @@ class WebApHelper {
     final Map<String, dynamic> parsedData =
         await WebApParser.instance.coursetableParser(query.data);
     if ((parsedData['courses'] as List<dynamic>).isEmpty) {
-      _manager.delete('${coursetableCacheKey}_${year}_$semester');
+      cacheManager?.delete('${coursetableCacheKey}_${year}_$semester');
     }
     return CourseData.fromJson(
       parsedData,

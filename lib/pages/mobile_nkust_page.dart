@@ -125,7 +125,7 @@ class _MobileNkustPageState extends State<MobileNkustPage> {
       finish = true;
     }
     final List<Cookie> cookies = await CookieManager.instance().getCookies(
-      url: WebUri(MobileNkustHelper.baseUrl),
+      url: WebUri(MobileNkustHelper.mobileBaseUrl),
     );
     final MobileCookiesData data =
         MobileCookiesData(cookies: <MobileCookies>[]);

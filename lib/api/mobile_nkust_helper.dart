@@ -3,14 +3,14 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:ap_common/ap_common.dart';
-import 'package:cookie_jar/cookie_jar.dart';
-import 'package:dio/io.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nkust_ap/api/ap_helper.dart';
 import 'package:nkust_ap/api/ap_status_code.dart';
 import 'package:nkust_ap/api/api_endpoints.dart';
+import 'package:nkust_ap/api/base_api_helper.dart';
+import 'package:nkust_ap/api/mixins/cookie_manageable.dart';
 import 'package:nkust_ap/api/parser/mobile_nkust_parser.dart';
 import 'package:nkust_ap/config/constants.dart';
 import 'package:nkust_ap/models/booking_bus_data.dart';
@@ -23,26 +23,24 @@ import 'package:nkust_ap/models/midterm_alerts_data.dart';
 import 'package:nkust_ap/models/mobile_cookies_data.dart';
 import 'package:nkust_ap/pages/mobile_nkust_page.dart';
 
-class MobileNkustHelper {
+class MobileNkustHelper extends BaseApiHelper with CookieManageable {
   MobileNkustHelper() {
+    // Select random user agent before initialization
     final Random random = Random();
     final int i = random.nextInt(userAgentList.length);
-    // print('user agnent index = $i');
-    dio = Dio(
-      BaseOptions(
-        followRedirects: false,
-        headers: <String, String>{
-          'user-agent': userAgentList[i],
-        },
-      ),
-    );
-    initCookiesJar();
+    _selectedUserAgent = userAgentList[i];
+    _initDio();
   }
 
-  static String get baseUrl => ApiEndpoints.mobileBaseUrl;
+  late String _selectedUserAgent;
+
+  @override
+  String get baseUrl => ApiEndpoints.mobileBaseUrl;
+
+  static String get mobileBaseUrl => ApiEndpoints.mobileBaseUrl;
   static String get busBaseUrl => ApiEndpoints.vmsBaseUrl;
 
-  static String get loginUrl => baseUrl;
+  static String get loginUrl => mobileBaseUrl;
   static String get homeUrl =>
       ApiEndpoints.getMobileUrl(ApiEndpoints.mobileHome);
   static String get courseUrl =>
@@ -78,11 +76,11 @@ class MobileNkustHelper {
   static bool get isSupport =>
       !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
-  late Dio dio;
+  @override
+  String get userAgent => _selectedUserAgent;
 
-  late CookieJar cookieJar;
-
-  MobileCookiesData? cookiesData;
+  @override
+  String get cookieCheckUrl => checkExpireUrl;
 
   static List<String> userAgentList = <String>[
     'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.16 Safari/537.36',
@@ -102,62 +100,21 @@ class MobileNkustHelper {
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36',
   ];
 
-  String? get userAgent => dio.options.headers['user-agent'] as String?;
-
   //ignore: prefer_constructors_over_static_methods
   static MobileNkustHelper get instance {
     return _instance ??= MobileNkustHelper();
   }
 
-  void initCookiesJar() {
-    cookieJar = CookieJar();
+  /// MobileNkustHelper uses custom Dio initialization with dual cookie
+  /// managers.
+  void _initDio() {
+    dioInit();
+    dio.options.followRedirects = false;
+    // Clear default interceptors and add custom cookie managers
+    dio.interceptors.clear();
     dio.interceptors.add(CookieManager(cookieJar));
     dio.interceptors.add(PrivateCookieManager(WebApHelper.instance.cookieJar));
     cookieJar.loadForRequest(Uri.parse(baseUrl));
-  }
-
-  void setProxy(String proxyIP) {
-    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final HttpClient client = HttpClient();
-      client.findProxy = (Uri uri) {
-        return 'PROXY $proxyIP';
-      };
-      return client;
-    };
-  }
-
-  void setCookieFromData(MobileCookiesData data) {
-    cookiesData = data;
-    for (final MobileCookies element in data.cookies) {
-      final Cookie tempCookie = Cookie(element.name, element.value);
-      tempCookie.domain = element.domain;
-      cookieJar.saveFromResponse(
-        Uri.parse(element.path),
-        <Cookie>[tempCookie],
-      );
-    }
-  }
-
-  void setCookie(
-    String url, {
-    required String cookieName,
-    required String cookieValue,
-    String? cookieDomain,
-  }) {
-    final Cookie tempCookie = Cookie(cookieName, cookieValue);
-    tempCookie.domain = cookieDomain;
-    cookieJar.saveFromResponse(
-      Uri.parse(url),
-      <Cookie>[tempCookie],
-    );
-  }
-
-  Future<bool> isCookieAlive() async {
-    try {
-      final Response<dynamic> res = await dio.get(checkExpireUrl);
-      return res.data == 'alive';
-    } catch (_) {}
-    return false;
   }
 
   Future<Response<dynamic>> generalRequest(

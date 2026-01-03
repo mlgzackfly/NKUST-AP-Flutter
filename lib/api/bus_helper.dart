@@ -1,17 +1,13 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:ap_common/ap_common.dart';
-import 'package:cookie_jar/cookie_jar.dart';
 import 'package:crypto/crypto.dart';
-import 'package:dio/io.dart';
 import 'package:dio_http_cache/dio_http_cache.dart';
-import 'package:native_dio_adapter/native_dio_adapter.dart';
 import 'package:nkust_ap/api/api_endpoints.dart';
+import 'package:nkust_ap/api/base_api_helper.dart';
 import 'package:nkust_ap/api/helper.dart';
 import 'package:nkust_ap/api/parser/api_tool.dart';
 import 'package:nkust_ap/api/parser/bus_parser.dart';
-import 'package:nkust_ap/config/constants.dart';
 import 'package:nkust_ap/models/booking_bus_data.dart';
 import 'package:nkust_ap/models/bus_data.dart';
 import 'package:nkust_ap/models/bus_reservations_data.dart';
@@ -119,15 +115,12 @@ class BusEncrypt {
   }
 }
 
-class BusHelper {
+class BusHelper extends BaseApiHelper {
   BusHelper() {
     dioInit();
   }
 
-  late Dio dio;
-  late DioCacheManager _manager;
   static BusHelper? _instance;
-  late CookieJar cookieJar;
 
   static int reLoginReTryCountsLimit = 5;
   static int reLoginReTryCounts = 0;
@@ -141,46 +134,15 @@ class BusHelper {
   static late BusEncrypt busEncryptObject;
   static String busHost = '${ApiEndpoints.busKuasBaseUrl}/';
 
+  @override
+  String get baseUrl => ApiEndpoints.busKuasBaseUrl;
+
+  @override
+  bool get clearCacheOnInit => true;
+
   //ignore: prefer_constructors_over_static_methods
   static BusHelper get instance {
     return _instance ??= BusHelper();
-  }
-
-  void setProxy(String proxyIP) {
-    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final HttpClient client = HttpClient();
-      client.findProxy = (Uri uri) {
-        return 'PROXY $proxyIP';
-      };
-      return client;
-    };
-  }
-
-  void dioInit() {
-    // Use PrivateCookieManager to overwrite origin CookieManager, because
-    // Cookie name of the NKUST ap system not follow the RFC6265. :(
-    dio = Dio();
-    if (Helper.isSupportCacheData) {
-      _manager =
-          DioCacheManager(CacheConfig(baseUrl: ApiEndpoints.busKuasBaseUrl));
-      dio.interceptors.add(_manager.interceptor as Interceptor);
-      _manager.clearAll();
-    }
-
-    cookieJar = CookieJar();
-    dio.interceptors.add(PrivateCookieManager(cookieJar));
-    dio.options.headers['user-agent'] =
-        'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36';
-    dio.options.headers['Connection'] = 'close';
-    dio.options.connectTimeout = const Duration(
-      milliseconds: Constants.timeoutMs,
-    );
-    dio.options.receiveTimeout = const Duration(
-      milliseconds: Constants.timeoutMs,
-    );
-    if (Platform.isIOS || Platform.isMacOS || Platform.isAndroid) {
-      dio.httpClientAdapter = NativeAdapter();
-    }
   }
 
   Future<void> loginPrepare() async {
@@ -298,7 +260,7 @@ class BusHelper {
         (res.data!['message'] as String).contains('未登入或是登入逾')) {
       // Remove fail cache.
       if (Helper.isSupportCacheData) {
-        _manager.delete(userTimeTableSelectCacheKey!);
+        cacheManager?.delete(userTimeTableSelectCacheKey!);
       }
       reLoginReTryCounts += 1;
       await busLogin();
@@ -319,8 +281,8 @@ class BusHelper {
       await busLogin();
     }
     if (Helper.isSupportCacheData) {
-      _manager.delete(userRecordsCacheKey);
-      _manager.delete(userTimeTableSelectCacheKey!);
+      cacheManager?.delete(userRecordsCacheKey);
+      cacheManager?.delete(userTimeTableSelectCacheKey!);
     }
 
     final Response<Map<String, dynamic>> res =
@@ -364,7 +326,7 @@ class BusHelper {
     }
     // Clear all cookie, because we can't sure user on which page.
     // two page can cencel bus.
-    if (Helper.isSupportCacheData) _manager.clearAll();
+    if (Helper.isSupportCacheData) cacheManager?.clearAll();
 
     return CancelBusData.fromJson(res.data!);
   }
@@ -408,7 +370,7 @@ class BusHelper {
 
     if (res.data!['code'] == 400 &&
         (res.data!['message'] as String).contains('未登入或是登入逾')) {
-      if (Helper.isSupportCacheData) _manager.delete(userRecordsCacheKey);
+      if (Helper.isSupportCacheData) cacheManager?.delete(userRecordsCacheKey);
       reLoginReTryCounts += 1;
       await busLogin();
       return busReservations();
@@ -459,7 +421,7 @@ class BusHelper {
     if (res.data!['code'] == 400 &&
         (res.data!['message'] as String).contains('未登入或是登入逾')) {
       if (Helper.isSupportCacheData) {
-        _manager.delete(userViolationRecordsCacheKey);
+        cacheManager?.delete(userViolationRecordsCacheKey);
       }
       reLoginReTryCounts += 1;
       await busLogin();
