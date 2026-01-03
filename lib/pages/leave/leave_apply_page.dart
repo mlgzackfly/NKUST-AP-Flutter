@@ -79,6 +79,8 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
 
   @override
   void dispose() {
+    _reason.dispose();
+    _delayReason.dispose();
     super.dispose();
   }
 

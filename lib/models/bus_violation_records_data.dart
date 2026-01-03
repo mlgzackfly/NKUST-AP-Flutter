@@ -96,13 +96,25 @@ class Reservation {
   String toRawJson() => jsonEncode(toJson());
 }
 
-// FIXME: Implement proper String to DateTime conversion
-class DateTimeConverter implements JsonConverter<DateTime, DateTime> {
+/// 處理來自不同來源的時間格式：
+/// - bus_parser.dart: ISO 8601 String
+/// - mobile_nkust_parser.dart: DateTime 物件
+class DateTimeConverter implements JsonConverter<DateTime, dynamic> {
   const DateTimeConverter();
 
   @override
-  DateTime fromJson(DateTime json) => json;
+  DateTime fromJson(dynamic json) {
+    if (json is DateTime) {
+      return json;
+    }
+    if (json is String) {
+      return DateTime.parse(json);
+    }
+    throw ArgumentError(
+      'Invalid type for DateTimeConverter: ${json.runtimeType}',
+    );
+  }
 
   @override
-  DateTime toJson(DateTime object) => object;
+  dynamic toJson(DateTime object) => object.toIso8601String();
 }

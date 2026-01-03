@@ -1109,6 +1109,46 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `選擇校區`
+  String get pickCampus {
+    return Intl.message(
+      '選擇校區',
+      name: 'pickCampus',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `選擇系所`
+  String get pickDepartment {
+    return Intl.message(
+      '選擇系所',
+      name: 'pickDepartment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `選擇導師`
+  String get pickTutor {
+    return Intl.message(
+      '選擇導師',
+      name: 'pickTutor',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `您先前已登入失敗達5次！請30分鐘後再嘗試登入！`
+  String get passwordFiveTimesError {
+    return Intl.message(
+      '您先前已登入失敗達5次！請30分鐘後再嘗試登入！',
+      name: 'passwordFiveTimesError',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

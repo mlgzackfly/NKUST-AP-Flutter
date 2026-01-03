@@ -80,10 +80,25 @@ void main() async {
 }
 
 class MyHttpOverrides extends HttpOverrides {
+  /// NKUST 相關的可信任域名列表
+  static const List<String> _trustedHosts = <String>[
+    'nkust.edu.tw',
+    'kuas.edu.tw',
+    'nkust.taki.dog',
+  ];
+
+  /// 檢查主機是否為可信任的 NKUST 相關域名
+  static bool _isTrustedHost(String host) {
+    return _trustedHosts.any(
+      (String trusted) => host == trusted || host.endsWith('.$trusted'),
+    );
+  }
+
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
       ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
+          (X509Certificate cert, String host, int port) =>
+              _isTrustedHost(host);
   }
 }

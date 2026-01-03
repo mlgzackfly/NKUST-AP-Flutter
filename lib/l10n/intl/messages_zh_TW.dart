@@ -148,6 +148,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "offlineLeaveData": MessageLookupByLibrary.simpleMessage("離線缺曠資料"),
         "offlineScore": MessageLookupByLibrary.simpleMessage("離線成績"),
         "paid": MessageLookupByLibrary.simpleMessage("已繳款"),
+        "passwordFiveTimesError": MessageLookupByLibrary.simpleMessage(
+            "您先前已登入失敗達5次！請30分鐘後再嘗試登入！"),
+        "pickCampus": MessageLookupByLibrary.simpleMessage("選擇校區"),
+        "pickDepartment": MessageLookupByLibrary.simpleMessage("選擇系所"),
+        "pickTutor": MessageLookupByLibrary.simpleMessage("選擇導師"),
         "punch": MessageLookupByLibrary.simpleMessage("拍照打卡"),
         "punchSuccess": MessageLookupByLibrary.simpleMessage("打卡成功"),
         "qijin": MessageLookupByLibrary.simpleMessage("旗津"),

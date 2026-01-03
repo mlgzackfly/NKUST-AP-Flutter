@@ -160,6 +160,12 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Offline absent Report"),
         "offlineScore": MessageLookupByLibrary.simpleMessage("Offline Score"),
         "paid": MessageLookupByLibrary.simpleMessage("Paid"),
+        "passwordFiveTimesError": MessageLookupByLibrary.simpleMessage(
+            "You have failed to login 5 times! Please try again after 30 minutes!"),
+        "pickCampus": MessageLookupByLibrary.simpleMessage("Select Campus"),
+        "pickDepartment":
+            MessageLookupByLibrary.simpleMessage("Select Department"),
+        "pickTutor": MessageLookupByLibrary.simpleMessage("Select Tutor"),
         "punch": MessageLookupByLibrary.simpleMessage("Punch"),
         "punchSuccess": MessageLookupByLibrary.simpleMessage("Punch Success"),
         "qijin": MessageLookupByLibrary.simpleMessage("Qijin"),

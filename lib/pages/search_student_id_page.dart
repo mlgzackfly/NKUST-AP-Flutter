@@ -33,6 +33,13 @@ class SearchStudentIdPageState extends State<SearchStudentIdPage> {
   }
 
   @override
+  void dispose() {
+    _id.dispose();
+    idFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     app = AppLocalizations.of(context);
     ap = ApLocalizations.of(context);

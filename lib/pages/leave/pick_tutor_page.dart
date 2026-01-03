@@ -6,6 +6,7 @@ import 'package:ap_common_firebase/ap_common_firebase.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:nkust_ap/l10n/l10n.dart';
 import 'package:nkust_ap/models/leave_campus_data.dart';
 import 'package:nkust_ap/res/assets.dart';
 import 'package:nkust_ap/utils/global.dart';
@@ -207,16 +208,12 @@ class _PickTutorPageState extends State<PickTutorPage> {
   }
 
   void pickItem(_Type type, int currentIndex, List<String?> items) {
-    // FIXME: Use proper localized titles for each type
-    String title = '';
-    switch (type) {
-      case _Type.campus:
-        title = ApLocalizations.of(context).pickTeacher;
-      case _Type.department:
-        title = ApLocalizations.of(context).pickTeacher;
-      case _Type.teacher:
-        title = ApLocalizations.of(context).pickTeacher;
-    }
+    final AppLocalizations app = AppLocalizations.of(context);
+    final String title = switch (type) {
+      _Type.campus => app.pickCampus,
+      _Type.department => app.pickDepartment,
+      _Type.teacher => app.pickTutor,
+    };
     showDialog<int>(
       context: context,
       builder: (BuildContext context) => AlertDialog(

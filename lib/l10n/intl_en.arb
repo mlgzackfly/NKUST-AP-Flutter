@@ -101,5 +101,9 @@
   "reportNetProblem": "Report Net Problem",
   "reportNetProblemSubTitle": "Report encountered network problems",
   "reportProblem":"Report Problem (Requires school email login)",
-  "enrollmentLetter": "Enrollment Letter"
+  "enrollmentLetter": "Enrollment Letter",
+  "pickCampus": "Select Campus",
+  "pickDepartment": "Select Department",
+  "pickTutor": "Select Tutor",
+  "passwordFiveTimesError": "You have failed to login 5 times! Please try again after 30 minutes!"
 }

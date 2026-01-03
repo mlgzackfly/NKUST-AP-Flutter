@@ -130,11 +130,64 @@ class MobileNkustParser {
   }
 
   static MidtermAlertsData midtermAlerts(dynamic rawHtml) {
-    // FIXME: Implement Midterm Alerts Parser for mobile nkust
-    final MidtermAlertsData midtermAlertsData = MidtermAlertsData(
-      courses: <MidtermAlerts>[],
-    );
-    return midtermAlertsData;
+    final Document document = html.parse(rawHtml);
+    final List<MidtermAlerts> courses = <MidtermAlerts>[];
+
+    // 嘗試使用 datatable 結構（與成績頁面類似）
+    final Element? datatable = document.getElementById('datatable');
+    if (datatable != null) {
+      final List<Element> trElements = datatable.getElementsByTagName('tr');
+      // 跳過表頭
+      for (int i = 1; i < trElements.length; i++) {
+        final List<Element> tdElements =
+            trElements[i].getElementsByTagName('td');
+        // 預期欄位：序號、班級、課程名稱、分組、授課教師、預警原因、備註
+        if (tdElements.length >= 5) {
+          courses.add(
+            MidtermAlerts(
+              entry: tdElements[0].text.trim(),
+              className: tdElements[1].text.trim(),
+              title: tdElements[2].text.trim(),
+              group: tdElements.length > 3 ? tdElements[3].text.trim() : '',
+              instructors:
+                  tdElements.length > 4 ? tdElements[4].text.trim() : '',
+              reason: tdElements.length > 5 ? tdElements[5].text.trim() : null,
+              remark: tdElements.length > 6 ? tdElements[6].text.trim() : null,
+            ),
+          );
+        }
+      }
+    } else {
+      // 備用方案：嘗試解析一般 table 結構
+      final List<Element> tables = document.getElementsByTagName('table');
+      for (final Element table in tables) {
+        final List<Element> trElements = table.getElementsByTagName('tr');
+        for (int i = 1; i < trElements.length; i++) {
+          final List<Element> tdElements =
+              trElements[i].getElementsByTagName('td');
+          if (tdElements.length >= 5) {
+            courses.add(
+              MidtermAlerts(
+                entry: tdElements[0].text.trim(),
+                className: tdElements[1].text.trim(),
+                title: tdElements[2].text.trim(),
+                group: tdElements.length > 3 ? tdElements[3].text.trim() : '',
+                instructors:
+                    tdElements.length > 4 ? tdElements[4].text.trim() : '',
+                reason:
+                    tdElements.length > 5 ? tdElements[5].text.trim() : null,
+                remark:
+                    tdElements.length > 6 ? tdElements[6].text.trim() : null,
+              ),
+            );
+          }
+        }
+        // 如果找到有效資料就停止
+        if (courses.isNotEmpty) break;
+      }
+    }
+
+    return MidtermAlertsData(courses: courses);
   }
 
   static Map<String, dynamic> busInfo(

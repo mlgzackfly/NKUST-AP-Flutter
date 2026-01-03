@@ -104,5 +104,9 @@
   "reportNetProblem": "網路問題通報",
   "reportNetProblemSubTitle": "通報遇到的網路問題(需使用校內信箱登入)",
   "reportProblem":"問題通報",
-  "enrollmentLetter" : "在學證明"
+  "enrollmentLetter" : "在學證明",
+  "pickCampus": "選擇校區",
+  "pickDepartment": "選擇系所",
+  "pickTutor": "選擇導師",
+  "passwordFiveTimesError": "您先前已登入失敗達5次！請30分鐘後再嘗試登入！"
 }
