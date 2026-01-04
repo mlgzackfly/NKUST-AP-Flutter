@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:ap_common/ap_common.dart';
@@ -84,9 +83,7 @@ class WebApParser {
       }
       if (rawHtml.contains(";top.location.href='index.html'")) {
         final RegExp regex = RegExp(r"alert\('(.*)'\);");
-        // log(rawHtml);
         final String? match = regex.allMatches(rawHtml).elementAt(1).group(1);
-        log('match $match');
         if (match == null) {
           return 999;
         } else if (match.contains('無此帳號或密碼不正確')) {
@@ -458,9 +455,7 @@ class WebApParser {
             );
           }
         }
-      } on Exception catch (e) {
-        log(e.toString());
-      }
+      } on Exception catch (_) {}
     }
     return data;
   }
@@ -496,9 +491,7 @@ class WebApParser {
           },
         );
       }
-    } on Exception catch (e) {
-      log(e.toString());
-    }
+    } on Exception catch (_) {}
     return data;
   }
 
@@ -519,9 +512,7 @@ class WebApParser {
           },
         );
       }
-    } on Exception catch (e) {
-      log(e.toString());
-    }
+    } on Exception catch (_) {}
     return data;
   }
 
@@ -758,6 +749,7 @@ class WebApParser {
 
 void main() {
   File('file.txt').readAsString().then((String contents) {
-    log(WebApParser.instance.apLoginParser(contents).toString());
+    // ignore: avoid_print
+    print(WebApParser.instance.apLoginParser(contents));
   });
 }

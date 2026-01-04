@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:ap_common/ap_common.dart';
 import 'package:flutter/material.dart';
 import 'package:html/dom.dart' as html;
@@ -229,8 +227,6 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
     }
     final Map<String, dynamic>? submitData =
         leaveSubmitInfoParser(res.data.toString());
-    log('on submit main page.');
-    log('Change leave type');
     final Map<String, dynamic> globalRequestData = <String, dynamic>{};
 
     globalRequestData[r'ctl00$ContentPlaceHolder1$CK001$TextBoxReason'] =
@@ -246,11 +242,9 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
     }
     final html.Document document = parse(res.data.toString());
 
-    log('generate need click button list');
     final List<html.Element> trObj =
         document.getElementsByClassName('mGrid')[0].getElementsByTagName('tr');
     if (trObj.length < 2) {
-      log('Error: not found leave days options');
       return null;
     }
     final List<String?> clickList = <String?>[];
@@ -266,7 +260,6 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
         );
       }
     }
-    log('click leave class');
 
     for (int i = 0; i < clickList.length; i++) {
       final Map<String?, dynamic> requestData =
@@ -299,12 +292,9 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
       ),
     );
 
-    log('End submit page');
-    log('Submit and add leave proof image.');
     requestData = hiddenInputGet(res.data.toString());
     requestData[r'ctl00$ContentPlaceHolder1$CK001$ButtonSend'] = '存檔';
     if (proofImage != null) {
-      log('Add proof image');
       requestData[r'ctl00$ContentPlaceHolder1$CK001$FileUpload1'] =
           await MultipartFile.fromFile(
         proofImage.path,

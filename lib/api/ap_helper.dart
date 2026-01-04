@@ -1,9 +1,8 @@
-import 'dart:developer';
-import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:ap_common/ap_common.dart';
-import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio_http_cache/dio_http_cache.dart';
+import 'package:flutter/foundation.dart';
 import 'package:nkust_ap/api/ap_status_code.dart';
 import 'package:nkust_ap/api/api_endpoints.dart';
 import 'package:nkust_ap/api/base_api_helper.dart';
@@ -89,9 +88,9 @@ class WebApHelper extends BaseApiHelper {
           bodyBytes: (await getValidationImage())!,
         );
 
-        log(username);
-        log(password);
-        log(captchaCode);
+        if (kDebugMode) {
+          debugPrint('Login attempt with captcha: $captchaCode');
+        }
         final Response<dynamic> res = await dio.post(
           ApiEndpoints.getWebApUrl(ApiEndpoints.webApLogin),
           data: <String, String>{
@@ -140,7 +139,6 @@ class WebApHelper extends BaseApiHelper {
         }
       } catch (e, s) {
         CrashlyticsUtil.instance.recordError(e, s);
-        log(e.toString());
       }
     }
     //
@@ -189,11 +187,7 @@ class WebApHelper extends BaseApiHelper {
     final Map<String, dynamic> skyDirectData =
         WebApParser.instance.webapToleaveParser(res.data);
 
-    res = await (Dio()
-          ..interceptors.add(
-            PrivateCookieManager(cookieJar),
-          ))
-        .post(
+    res = await tempDio.post(
       ApiEndpoints.getMobileUrl(ApiEndpoints.mobileLoginByPortal),
       data: skyDirectData,
       options: Options(
@@ -234,11 +228,7 @@ class WebApHelper extends BaseApiHelper {
     final Map<String, dynamic> skyDirectData =
         WebApParser.instance.webapToleaveParser(res.data);
 
-    res = await (Dio()
-          ..interceptors.add(
-            PrivateCookieManager(cookieJar),
-          ))
-        .post(
+    res = await tempDio.post(
       ApiEndpoints.getOosafUrl(ApiEndpoints.oosafLoginByPortal),
       data: skyDirectData,
       options: Options(
@@ -279,11 +269,7 @@ class WebApHelper extends BaseApiHelper {
     final Map<String, dynamic> skyDirectData =
         WebApParser.instance.webapToleaveParser(res.data);
 
-    res = await (Dio()
-          ..interceptors.add(
-            PrivateCookieManager(cookieJar),
-          ))
-        .post(
+    res = await tempDio.post(
       ApiEndpoints.getStdSysUrl(ApiEndpoints.stdSysLoginByPortal),
       data: skyDirectData,
       options: Options(

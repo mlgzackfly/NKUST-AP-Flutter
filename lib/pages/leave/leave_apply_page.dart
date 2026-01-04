@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:ap_common/ap_common.dart';
@@ -422,7 +421,9 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
                     }
                   } else {
                     final File file = File(pickedImage.path);
-                    log('resize before: ${file.mb}');
+                    if (kDebugMode) {
+                      debugPrint('resize before: ${file.mb}');
+                    }
                     if ((file.mb) >= Constants.maxImageSize) {
                       resizeImage(file);
                     } else {
@@ -804,7 +805,9 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
 
   Future<void> resizeImage(File image) async {
     final File result = await Utils.resizeImageByNative(image);
-    log('resize after: ${result.mb}');
+    if (kDebugMode) {
+      debugPrint('resize after: ${result.mb}');
+    }
     (AnalyticsUtil.instance as FirebaseAnalyticsUtils)
         .logLeavesImageCompressSize(image, result);
     if ((result.mb) <= Constants.maxImageSize) {

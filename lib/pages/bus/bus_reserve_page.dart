@@ -46,11 +46,6 @@ class BusReservePageState extends State<BusReservePage>
   }
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     super.build(context);
     app = AppLocalizations.of(context);

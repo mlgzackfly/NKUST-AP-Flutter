@@ -112,4 +112,27 @@ abstract class BaseApiHelper {
       await _cacheManager!.clearAll();
     }
   }
+
+  /// Lazy-initialized temporary Dio instance for cross-origin requests.
+  /// Reuses the same instance to avoid unnecessary memory allocation.
+  Dio? _tempDio;
+
+  /// Gets a temporary Dio instance for cross-origin requests.
+  ///
+  /// This instance shares the same cookie jar as the main Dio instance,
+  /// but doesn't have the cache interceptor. It's reused across requests
+  /// to avoid creating new instances for each cross-origin request.
+  Dio get tempDio {
+    if (_tempDio == null) {
+      _tempDio = Dio();
+      _tempDio!.interceptors.add(PrivateCookieManager(cookieJar));
+      _tempDio!.options.headers['user-agent'] = userAgent;
+      _tempDio!.options.headers['Connection'] = 'close';
+      _tempDio!.options.connectTimeout =
+          Duration(milliseconds: connectTimeoutMs);
+      _tempDio!.options.receiveTimeout =
+          Duration(milliseconds: receiveTimeoutMs);
+    }
+    return _tempDio!;
+  }
 }
