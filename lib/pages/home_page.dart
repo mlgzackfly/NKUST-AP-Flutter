@@ -21,6 +21,10 @@ import 'package:nkust_ap/utils/global.dart';
 import 'package:nkust_ap/widgets/share_data_widget.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+part 'home/home_config_mixin.dart';
+part 'home/home_data_mixin.dart';
+part 'home/home_login_mixin.dart';
+
 class HomePage extends StatefulWidget {
   static const String routerName = '/home';
 
@@ -28,30 +32,44 @@ class HomePage extends StatefulWidget {
   HomePageState createState() => HomePageState();
 }
 
-class HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage>
+    with HomeLoginMixin, HomeDataMixin, HomeConfigMixin {
   final GlobalKey<HomePageScaffoldState> _homeKey =
       GlobalKey<HomePageScaffoldState>();
 
+  @override
+  GlobalKey<HomePageScaffoldState> get homeKey => _homeKey;
+
+  @override
   bool get isMobile => MediaQuery.of(context).size.shortestSide < 680;
 
+  @override
   HomeState state = HomeState.loading;
 
   late AppLocalizations app;
   late ApLocalizations ap;
 
+  @override
   Widget? content;
 
+  @override
   List<Announcement> announcements = <Announcement>[];
 
+  @override
   bool isLogin = false;
+
   bool displayPicture = true;
   bool isStudyExpanded = false;
   bool isBusExpanded = false;
   bool isLeaveExpanded = false;
 
+  @override
   bool leaveEnable = true;
+
+  @override
   bool busEnable = true;
 
+  @override
   UserInfo? userInfo;
 
   TextStyle get _defaultStyle => TextStyle(
@@ -148,7 +166,7 @@ class HomePageState extends State<HomePage> {
         if (!mounted) return;
         AppTrackingUtils.show(context: context);
       }
-      await _checkData(first: true);
+      await _checkDataWithFirst(first: true);
     });
     super.initState();
   }
@@ -494,242 +512,20 @@ class HomePageState extends State<HomePage> {
     }
   }
 
-  void _getAnnouncements() {
-    AnnouncementHelper.instance.getAnnouncements(
-      tags: <String>['nkust'],
-      callback: GeneralCallback<List<Announcement>>(
-        onFailure: (_) => setState(() => state = HomeState.error),
-        onError: (_) => setState(() => state = HomeState.error),
-        onSuccess: (List<Announcement> data) {
-          announcements = data;
-          if (mounted) {
-            setState(() {
-              if (data.isEmpty) {
-                state = HomeState.empty;
-              } else {
-                state = HomeState.finish;
-              }
-            });
-          }
-        },
-      ),
-    );
-  }
-
-  void _setupBusNotify(BuildContext context) {
-    if (PreferenceUtil.instance.getBool(Constants.prefBusNotify, false)) {
-      Helper.instance.getBusReservations(
-        callback: GeneralCallback<BusReservationsData>(
-          onSuccess: (BusReservationsData response) async {
-            await Utils.setBusNotify(context, response.reservations);
-          },
-          onFailure: (DioException e) {
-            if (e.hasResponse) {
-              AnalyticsUtil.instance.logApiEvent(
-                'getBusReservations',
-                e.response!.statusCode!,
-                message: e.message ?? '',
-              );
-            }
-          },
-          onError: (GeneralResponse e) => null,
-        ),
-      );
-    }
-  }
-
-  Future<void> _getUserInfo() async {
-    if (PreferenceUtil.instance.getBool(Constants.prefIsOfflineLogin, false)) {
-      userInfo = UserInfo.load(Helper.username!);
-    } else {
-      Helper.instance.getUsersInfo(
-        callback: GeneralCallback<UserInfo>(
-          onSuccess: (UserInfo data) {
-            if (mounted) {
-              setState(() {
-                userInfo = data;
-              });
-              if (userInfo != null) {
-                AnalyticsUtil.instance.logUserInfo(userInfo!);
-                userInfo!.save(Helper.username!);
-              }
-              _checkData();
-              if (PreferenceUtil.instance
-                  .getBool(Constants.prefDisplayPicture, true)) {
-                _getUserPicture();
-              }
-            }
-          },
-          onFailure: (DioException e) {
-            if (e.hasResponse) {
-              AnalyticsUtil.instance.logApiEvent(
-                'getUserInfo',
-                e.response!.statusCode!,
-                message: e.message ?? '',
-              );
-            }
-          },
-          onError: (GeneralResponse e) => null,
-        ),
-      );
-    }
-  }
-
-  Future<void> _getUserPicture() async {
-    try {
-      if (userInfo != null && userInfo!.pictureUrl != null) {
-        final Uint8List? response = await Helper.instance.getUserPicture();
-        if (mounted) {
-          setState(() {
-            userInfo!.pictureBytes = response;
-          });
-        }
-        // CacheUtils.savePictureData(response);
-      }
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  void showLoginingSnackBar() {
-    if (isLogin) return;
-    _homeKey.currentState
-        ?.showSnackBar(
-          text: ApLocalizations.of(context).logining,
-          actionText: ApLocalizations.of(context).offlineLogin,
-          onSnackBarTapped: offLineLogin,
-        )
-        ?.closed
-        .then(
-      (SnackBarClosedReason reason) {
-        showLoginingSnackBar();
-      },
-    );
-  }
-
-  Future<void> _login() async {
-    await Future<void>.delayed(const Duration(microseconds: 30));
-    if (!mounted) return;
-    showLoginingSnackBar();
-    final String username =
-        PreferenceUtil.instance.getString(Constants.prefUsername, '');
-    final String password =
-        PreferenceUtil.instance.getStringSecurity(Constants.prefPassword, '');
-
-    if (!mounted) return;
-    Helper.instance.login(
-      context: context,
-      username: username,
-      password: password,
-      callback: GeneralCallback<LoginResponse?>(
-        onSuccess: (LoginResponse? response) {
-          if (isLogin) return;
-          ShareDataWidget.of(context)!.data.loginResponse = response;
-          isLogin = true;
-          PreferenceUtil.instance.setBool(Constants.prefIsOfflineLogin, false);
-          _getUserInfo();
-          _setupBusNotify(context);
-          if (state != HomeState.finish) {
-            _getAnnouncements();
-          }
-          _homeKey.currentState
-            ?..hideSnackBar()
-            ..showBasicHint(text: ap.loginSuccess);
-        },
-        onFailure: (DioException e) {
-          if (isLogin) return;
-          final String text = e.i18nMessage ?? ap.somethingError;
-          _homeKey.currentState?.showSnackBar(
-            text: text,
-            actionText: ap.retry,
-            onSnackBarTapped: _login,
-          );
-          offLineLogin();
-        },
-        onError: (GeneralResponse response) async {
-          if (isLogin) return;
-          String message = '';
-          if (response.statusCode == ApStatusCode.userDataError ||
-              response.statusCode == ApStatusCode.passwordFiveTimesError) {
-            Toast.show(ap.passwordError, context);
-            await PreferenceUtil.instance
-                .setBool(Constants.prefAutoLogin, false);
-            checkLogin();
-          } else {
-            switch (response.statusCode) {
-              case ApStatusCode.schoolServerError:
-                message = ap.schoolServerError;
-              case ApStatusCode.apiServerError:
-                message = ap.apiServerError;
-              case ApStatusCode.unknownError:
-              case ApStatusCode.cancel:
-                message = ap.loginFail;
-              default:
-                message = ap.somethingError;
-            }
-            _homeKey.currentState?.showSnackBar(
-              text: message,
-              actionText: ap.retry,
-              onSnackBarTapped: _login,
-            );
-            offLineLogin();
-          }
-        },
-      ),
-    );
-  }
-
-  void offLineLogin() {
-    PreferenceUtil.instance.setBool(Constants.prefIsOfflineLogin, true);
-    UiUtil.instance.showToast(context, ap.loadOfflineData);
-    isLogin = true;
-    _getUserInfo();
-    _homeKey.currentState?.hideSnackBar();
-  }
-
-  void handleLoginSuccess(String? username, String? password) {
-    isLogin = true;
-    PreferenceUtil.instance.setBool(Constants.prefIsOfflineLogin, false);
-    _getUserInfo();
-    _setupBusNotify(context);
-    if (state != HomeState.finish) {
-      _getAnnouncements();
-    }
-    _homeKey.currentState?.showBasicHint(text: ap.loginSuccess);
-  }
-
-  Future<void> openLoginPage() async {
-    final bool? result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(builder: (_) => LoginPage()),
-    );
-    checkLogin();
-    if (result ?? false) {
-      handleLoginSuccess(
-        Helper.username,
-        Helper.password,
-      );
-    }
-  }
-
-  Future<void> checkLogin() async {
-    await Future<void>.delayed(const Duration(microseconds: 30));
-    if (isLogin) {
-      _homeKey.currentState?.hideSnackBar();
-    } else {
-      if (!mounted) return;
-      final ScaffoldFeatureController<SnackBar, SnackBarClosedReason>?
-          controller = _homeKey.currentState?.showSnackBar(
-        text: ApLocalizations.of(context).notLogin,
-        actionText: ApLocalizations.of(context).login,
-        onSnackBarTapped: openLoginPage,
-      );
-      controller?.closed.then(
-        (SnackBarClosedReason reason) {
-          checkLogin();
-        },
-      );
-    }
-  }
+  // Bridge methods to connect mixins with private naming convention
+  @override
+  void _getAnnouncements() => getAnnouncements();
+  @override
+  void _setupBusNotify(BuildContext context) => setupBusNotify(context);
+  @override
+  void _getUserInfo() => getUserInfo();
+  @override
+  void _getUserPicture() => getUserPicture();
+  void _login() => performLogin();
+  @override
+  void _checkData() => checkAppData();
+  Future<void> _checkDataWithFirst({bool first = false}) =>
+      checkAppData(first: first);
 
   Future<void> _openPage(
     Widget page, {
@@ -757,99 +553,5 @@ class HomePageState extends State<HomePage> {
         setState(() => content = page);
       }
     }
-  }
-
-  static const String prefApiKey = 'inkust_api_key';
-
-  Future<void> _checkData({bool first = false}) async {
-    final AppLocalizations app = AppLocalizations.of(context);
-    final PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    final String currentVersion =
-        PreferenceUtil.instance.getString(Constants.prefCurrentVersion, '');
-    AnalyticsUtil.instance.setUserProperty(
-      Constants.versionCode,
-      packageInfo.buildNumber,
-    );
-    if (currentVersion != packageInfo.buildNumber && first) {
-      final Map<String, dynamic>? rawData = await FileAssets.changelogData;
-      final String updateNoteContent = (rawData![packageInfo.buildNumber]
-          as Map<String, dynamic>)[ApLocalizations.current.locale] as String;
-      if (!mounted) return;
-      DialogUtils.showUpdateContent(
-        context,
-        'v${packageInfo.version}\n'
-        '$updateNoteContent',
-      );
-      PreferenceUtil.instance.setString(
-        Constants.prefCurrentVersion,
-        packageInfo.buildNumber,
-      );
-    }
-    VersionInfo versionInfo;
-    try {
-      final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
-      await remoteConfig.setConfigSettings(
-        RemoteConfigSettings(
-          fetchTimeout: const Duration(seconds: 10),
-          minimumFetchInterval: const Duration(seconds: 10),
-        ),
-      );
-      await remoteConfig.fetchAndActivate();
-      final List<String> leaveTimeCode = List<String>.from(
-        jsonDecode(remoteConfig.getString(Constants.leavesTimeCode))
-            as List<dynamic>,
-      );
-      final List<String> mobileNkustUserAgent = List<String>.from(
-        jsonDecode(
-          remoteConfig.getString(Constants.mobileNkustUserAgent),
-        ) as List<dynamic>,
-      );
-      busEnable = remoteConfig.getBool(Constants.busEnable);
-      leaveEnable = remoteConfig.getBool(Constants.leaveEnable);
-      PreferenceUtil.instance.setBool(Constants.busEnable, busEnable);
-      PreferenceUtil.instance.setBool(Constants.leaveEnable, leaveEnable);
-      if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-        Helper.selector = CrawlerSelector.fromRawJson(
-          remoteConfig.getString(Constants.crawlerSelector),
-        );
-        Helper.selector!.save();
-      }
-      final SemesterData semesterData = SemesterData.fromRawJson(
-        remoteConfig.getString(Constants.semesterData),
-      );
-      semesterData.save();
-      PreferenceUtil.instance
-          .setStringList(Constants.leavesTimeCode, leaveTimeCode);
-      PreferenceUtil.instance.setStringList(
-        Constants.mobileNkustUserAgent,
-        mobileNkustUserAgent,
-      );
-      MobileNkustHelper.userAgentList = mobileNkustUserAgent;
-      versionInfo = VersionInfo(
-        code: remoteConfig.getInt(ApConstants.appVersion),
-        isForceUpdate: remoteConfig.getBool(ApConstants.isForceUpdate),
-        content: remoteConfig.getString(ApConstants.newVersionContent),
-      );
-      if (first) {
-        if (!mounted) return;
-        DialogUtils.showNewVersionContent(
-          context: context,
-          appName: app.appName,
-          iOSAppId: '1439751462',
-          defaultUrl: 'https://www.facebook.com/NKUST.ITC/',
-          githubRepositoryName: 'NKUST-ITC/NKUST-AP-Flutter',
-          windowsPath:
-              'https://github.com/NKUST-ITC/NKUST-AP-Flutter/releases/download/%s/nkust_ap_windows.zip',
-          snapStoreId: 'nkust-ap',
-          versionInfo: versionInfo,
-        );
-      }
-    } catch (e) {
-      Helper.selector = CrawlerSelector.load();
-      busEnable = PreferenceUtil.instance.getBool(Constants.busEnable, true);
-      leaveEnable =
-          PreferenceUtil.instance.getBool(Constants.leaveEnable, true);
-    }
-    setState(() {});
   }
 }
