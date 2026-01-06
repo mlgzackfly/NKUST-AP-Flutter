@@ -91,8 +91,11 @@ class Helper {
     cancelToken = CancelToken();
   }
 
+  /// Resets the singleton instance, disposing of all resources.
   static void resetInstance() {
-    _instance = Helper();
+    _instance?.dio.close();
+    _instance = null;
+    cancelToken?.cancel('Instance reset');
     cancelToken = CancelToken();
   }
 

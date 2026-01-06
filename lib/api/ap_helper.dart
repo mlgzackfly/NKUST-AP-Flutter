@@ -45,6 +45,12 @@ class WebApHelper extends BaseApiHelper {
     return _instance ??= WebApHelper();
   }
 
+  /// Resets the singleton instance, disposing of all resources.
+  static void resetInstance() {
+    _instance?.dispose();
+    _instance = null;
+  }
+
   WebApHelper() {
     dioInit();
   }

@@ -28,6 +28,12 @@ class NKUSTHelper extends BaseApiHelper {
     return _instance ??= NKUSTHelper();
   }
 
+  /// Resets the singleton instance, disposing of all resources.
+  static void resetInstance() {
+    _instance?.dispose();
+    _instance = null;
+  }
+
   NKUSTHelper() {
     dioInit();
   }

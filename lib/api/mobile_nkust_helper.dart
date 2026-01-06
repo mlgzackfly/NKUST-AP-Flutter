@@ -105,6 +105,12 @@ class MobileNkustHelper extends BaseApiHelper with CookieManageable {
     return _instance ??= MobileNkustHelper();
   }
 
+  /// Resets the singleton instance, disposing of all resources.
+  static void resetInstance() {
+    _instance?.dispose();
+    _instance = null;
+  }
+
   /// MobileNkustHelper uses custom Dio initialization with dual cookie
   /// managers.
   void _initDio() {

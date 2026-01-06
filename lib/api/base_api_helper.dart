@@ -135,4 +135,16 @@ abstract class BaseApiHelper {
     }
     return _tempDio!;
   }
+
+  /// Disposes of all resources held by this helper.
+  ///
+  /// This closes the Dio instances and clears the cache manager.
+  /// After calling this method, [dioInit] must be called again
+  /// before using the helper.
+  void dispose() {
+    dio.close();
+    _tempDio?.close();
+    _tempDio = null;
+    _cacheManager = null;
+  }
 }

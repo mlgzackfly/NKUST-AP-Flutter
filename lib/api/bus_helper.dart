@@ -145,6 +145,12 @@ class BusHelper extends BaseApiHelper {
     return _instance ??= BusHelper();
   }
 
+  /// Resets the singleton instance, disposing of all resources.
+  static void resetInstance() {
+    _instance?.dispose();
+    _instance = null;
+  }
+
   Future<void> loginPrepare() async {
     // Get global cookie. Only cookies get from the root directory can be used.
     await dio.head(busHost);

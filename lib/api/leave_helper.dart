@@ -32,6 +32,12 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
     return _instance ??= LeaveHelper();
   }
 
+  /// Resets the singleton instance, disposing of all resources.
+  static void resetInstance() {
+    _instance?.dispose();
+    _instance = null;
+  }
+
   int reLoginReTryCountsLimit = 3;
   int reLoginReTryCounts = 0;
 
