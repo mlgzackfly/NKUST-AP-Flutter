@@ -6,9 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nkust_ap/models/error_response.dart';
 import 'package:nkust_ap/models/leave_campus_data.dart';
+import 'package:nkust_ap/models/leave_model.dart';
 import 'package:nkust_ap/models/leave_submit_data.dart';
 import 'package:nkust_ap/models/leave_submit_info_data.dart';
 import 'package:nkust_ap/pages/leave/pick_tutor_page.dart';
+import 'package:nkust_ap/pages/leave/widgets/leave_date_picker_card.dart';
+import 'package:nkust_ap/utils/file_extension.dart';
 import 'package:nkust_ap/utils/global.dart';
 import 'package:nkust_ap/utils/page_state.dart';
 import 'package:sprintf/sprintf.dart';
@@ -253,97 +256,21 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
               child: ListView.builder(
                 itemCount: leaveModels.length,
                 scrollDirection: Axis.horizontal,
-                itemBuilder: (_, int index) => Card(
-                  elevation: 4.0,
-                  margin: const EdgeInsets.symmetric(
-                    vertical: 8.0,
-                    horizontal: 8.0,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Column(
-                      children: <Widget>[
-                        const SizedBox(height: 4.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: <Widget>[
-                            Text(
-                              '${leaveModels[index].dateTime.year}/'
-                              '${leaveModels[index].dateTime.month}/'
-                              '${leaveModels[index].dateTime.day}',
-                            ),
-                            IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(
-                                ApIcon.cancel,
-                                size: 20.0,
-                                color: ApTheme.of(context).red,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  leaveModels.removeAt(index);
-                                  checkIsDelay();
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: 200,
-                          width: 200,
-                          child: GridView.builder(
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
-                            ),
-                            itemBuilder:
-                                (BuildContext context, int sectionIndex) {
-                              return InkWell(
-                                child: Container(
-                                  margin: const EdgeInsets.all(4.0),
-                                  padding: const EdgeInsets.all(2.0),
-                                  decoration: BoxDecoration(
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(4.0),
-                                    ),
-                                    border: Border.all(
-                                      color: ApTheme.of(context).blueAccent,
-                                    ),
-                                    color: leaveModels[index]
-                                            .selected[sectionIndex]
-                                        ? ApTheme.of(context).blueAccent
-                                        : null,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    leaveSubmitInfo.timeCodes[sectionIndex],
-                                    style: TextStyle(
-                                      color: leaveModels[index]
-                                              .selected[sectionIndex]
-                                          ? Colors.white
-                                          : ApTheme.of(context).blueAccent,
-                                    ),
-                                  ),
-                                ),
-                                onTap: () {
-                                  setState(() {
-                                    leaveModels[index].selected[sectionIndex] =
-                                        !leaveModels[index]
-                                            .selected[sectionIndex];
-                                  });
-                                },
-                              );
-                            },
-                            itemCount: leaveSubmitInfo.timeCodes.length,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                itemBuilder: (_, int index) => LeaveDatePickerCard(
+                  leaveModel: leaveModels[index],
+                  timeCodes: leaveSubmitInfo.timeCodes,
+                  onRemove: () {
+                    setState(() {
+                      leaveModels.removeAt(index);
+                      checkIsDelay();
+                    });
+                  },
+                  onTimeCodeToggle: (int sectionIndex) {
+                    setState(() {
+                      leaveModels[index].selected[sectionIndex] =
+                          !leaveModels[index].selected[sectionIndex];
+                    });
+                  },
                 ),
               ),
             ),
@@ -831,25 +758,4 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
       AnalyticsUtil.instance.logEvent('leave_pick_fail');
     }
   }
-}
-
-class LeaveModel {
-  DateTime dateTime;
-  List<bool> selected = <bool>[];
-
-  LeaveModel(this.dateTime, int count) {
-    for (int i = 0; i < count; i++) {
-      selected.add(false);
-    }
-  }
-
-  bool isSameDay(DateTime dateTime) {
-    return dateTime.year == this.dateTime.year &&
-        dateTime.month == this.dateTime.month &&
-        dateTime.day == this.dateTime.day;
-  }
-}
-
-extension FileExtension on File {
-  double get mb => lengthSync() / 1024 / 1024;
 }

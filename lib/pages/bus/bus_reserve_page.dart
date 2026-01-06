@@ -5,6 +5,7 @@ import 'package:nkust_ap/models/booking_bus_data.dart';
 import 'package:nkust_ap/models/cancel_bus_data.dart';
 import 'package:nkust_ap/models/error_response.dart';
 import 'package:nkust_ap/models/models.dart';
+import 'package:nkust_ap/pages/bus/widgets/bus_time_item.dart';
 import 'package:nkust_ap/utils/global.dart';
 import 'package:nkust_ap/utils/page_state.dart';
 import 'package:nkust_ap/widgets/flutter_calendar.dart';
@@ -147,12 +148,6 @@ class BusReservePageState extends State<BusReservePage>
     );
   }
 
-  TextStyle _textStyle(BusTime busTime) => TextStyle(
-        color: busTime.getColorState(context),
-        fontSize: 18.0,
-        decorationColor: ApTheme.of(context).greyText,
-      );
-
   String? get errorText {
     switch (state) {
       case PageState.error:
@@ -215,90 +210,40 @@ class BusReservePageState extends State<BusReservePage>
   List<Widget> _renderBusTimeWidgets() {
     final List<Widget> list = <Widget>[];
     if (busData != null) {
-      for (final BusTime i in busData!.timetable) {
-        if (selectStartStation == Station.janGong && i.startStation == '建工') {
-          list.add(_busTimeWidget(i));
-        } else if (selectStartStation == Station.yanchao &&
-            i.startStation == '燕巢') {
-          list.add(_busTimeWidget(i));
-        } else if (selectStartStation == Station.first &&
-            i.startStation == '第一') {
-          list.add(_busTimeWidget(i));
+      for (final BusTime busTime in busData!.timetable) {
+        final bool shouldShow = _shouldShowBusTime(busTime);
+        if (shouldShow) {
+          list.add(
+            BusTimeItem(
+              busTime: busTime,
+              onTap: _getOnTapForBusTime(busTime),
+            ),
+          );
         }
       }
     }
     return list;
   }
 
-  Widget _busTimeWidget(BusTime busTime) => Column(
-        children: <Widget>[
-          InkWell(
-            onTap: busTime.canReserve() && !busTime.isReserve
-                ? () => _showBookingDialog(busTime)
-                : (busTime.isReserve ? () => _showCancelDialog(busTime) : null),
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Expanded(
-                    child: Icon(
-                      ApIcon.directionsBus,
-                      size: 20.0,
-                      color: busTime.getColorState(context),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      busTime.getTime(),
-                      textAlign: TextAlign.center,
-                      style: _textStyle(busTime),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      '${busTime.reserveCount} ${ap.people}',
-                      textAlign: TextAlign.center,
-                      style: _textStyle(busTime),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      busTime.getSpecialTrainTitle(app),
-                      textAlign: TextAlign.center,
-                      style: _textStyle(busTime),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Icon(
-                      ApIcon.accessTime,
-                      size: 20.0,
-                      color: busTime.getColorState(context),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      busTime.getReserveState(app),
-                      textAlign: TextAlign.center,
-                      style: _textStyle(busTime),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Divider(color: ApTheme.of(context).grey, height: 0.0),
-          ),
-        ],
-      );
+  bool _shouldShowBusTime(BusTime busTime) {
+    switch (selectStartStation) {
+      case Station.janGong:
+        return busTime.startStation == '建工';
+      case Station.yanchao:
+        return busTime.startStation == '燕巢';
+      case Station.first:
+        return busTime.startStation == '第一';
+    }
+  }
+
+  VoidCallback? _getOnTapForBusTime(BusTime busTime) {
+    if (busTime.canReserve() && !busTime.isReserve) {
+      return () => _showBookingDialog(busTime);
+    } else if (busTime.isReserve) {
+      return () => _showCancelDialog(busTime);
+    }
+    return null;
+  }
 
   Future<void> _getBusTimeTables() async {
     if (PreferenceUtil.instance.getBool(Constants.prefIsOfflineLogin, false)) {
