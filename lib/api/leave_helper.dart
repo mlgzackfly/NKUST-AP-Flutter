@@ -117,7 +117,7 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
       ),
     );
 
-    return LeaveData.fromJson(leaveQueryParser(queryRequest.data));
+    return leaveQueryParser(queryRequest.data);
   }
 
   Future<LeaveSubmitInfoData> getLeavesSubmitInfo() async {
@@ -160,7 +160,7 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
         contentType: Headers.formUrlEncodedContentType,
       ),
     );
-    return LeaveSubmitInfoData.fromJson(leaveSubmitInfoParser(res.data)!);
+    return leaveSubmitInfoParser(res.data)!;
   }
 
   Future<Response<dynamic>?> leavesSubmit(
@@ -210,7 +210,7 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
     if (res.data.toString().contains('alert(')) {
       return null;
     }
-    final Map<String, dynamic>? submitData =
+    final LeaveSubmitInfoData? submitData =
         leaveSubmitInfoParser(res.data.toString());
     final Map<String, dynamic> globalRequestData = <String, dynamic>{};
 
@@ -238,8 +238,7 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
       final List<String> leaveDays = data.days[i - 1].dayClass!;
       for (int l = 0; l < leaveDays.length; l++) {
         clickList.add(
-          td[(submitData!['timeCodes'] as List<dynamic>).indexOf(leaveDays[l]) +
-                  3]
+          td[submitData!.timeCodes.indexOf(leaveDays[l]) + 3]
               .getElementsByTagName('input')[0]
               .attributes['name'],
         );

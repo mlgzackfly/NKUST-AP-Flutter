@@ -276,9 +276,7 @@ class BusHelper extends BaseApiHelper {
       return timeTableQuery(year: year, month: month, day: day);
     }
     resetRetryCount();
-    return BusData.fromJson(
-      busTimeTableParser(res.data!, busReservations: await userRecord),
-    );
+    return busTimeTableParser(res.data!, busReservations: await userRecord);
   }
 
   Future<BookingBusData> busBook({required String busId}) async {
@@ -385,9 +383,7 @@ class BusHelper extends BaseApiHelper {
       return busReservations();
     }
     resetRetryCount();
-    return BusReservationsData.fromJson(
-      busReservationsParser(res.data!),
-    );
+    return busReservationsParser(res.data!);
   }
 
   Future<BusViolationRecordsData> busViolationRecords() async {
@@ -437,8 +433,6 @@ class BusHelper extends BaseApiHelper {
       return busViolationRecords();
     }
     resetRetryCount();
-    return BusViolationRecordsData.fromJson(
-      busViolationRecordsParser(res.data!),
-    );
+    return busViolationRecordsParser(res.data!);
   }
 }

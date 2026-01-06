@@ -1,6 +1,11 @@
 import 'package:html/dom.dart';
 import 'package:html/parser.dart' show parse;
+import 'package:nkust_ap/models/leave_data.dart';
+import 'package:nkust_ap/models/leave_submit_info_data.dart';
 
+/// Extracts hidden input fields from HTML.
+///
+/// Used to get ASP.NET view state and other hidden form values.
 Map<String?, dynamic> hiddenInputGet(String? html, {bool? removeTdElement}) {
   String? rawHtml = html;
   if (removeTdElement == true) {
@@ -31,6 +36,7 @@ Map<String?, dynamic> hiddenInputGet(String? html, {bool? removeTdElement}) {
   return hiddenData;
 }
 
+/// Extracts all input field values from HTML.
 Map<String?, dynamic> allInputValueParser(String? html) {
   final Document document = parse(html);
   final Map<String?, dynamic> hiddenData = <String?, dynamic>{};
@@ -44,62 +50,68 @@ Map<String?, dynamic> allInputValueParser(String? html) {
   return hiddenData;
 }
 
-Map<String, dynamic> leaveQueryParser(String? html) {
+/// Parses leave query results from HTML.
+///
+/// Returns a [LeaveData] object with parsed leave records.
+LeaveData leaveQueryParser(String? html) {
   final Document document = parse(html);
-  final List<Map<String, dynamic>> dataList = <Map<String, dynamic>>[];
+  final List<Leave> leaves = <Leave>[];
   final List<String> timeCodeList = <String>[];
   final List<Element> tableDom = document.getElementsByClassName('mGridDetail');
+
   if (tableDom.isEmpty) {
-    return <String, dynamic>{
-      'data': <Map<String, dynamic>>[],
-      'timeCodes': <String>[],
-    };
+    return LeaveData(leaves: <Leave>[], timeCodes: <String>[]);
   }
+
   final List<Element> trDom = tableDom[0].getElementsByTagName('tr');
 
-  //make timeCode list
+  // Make timeCode list from header row
   final List<Element> th = trDom[0].getElementsByTagName('th');
   for (int i = 4; i < th.length; i++) {
     timeCodeList.add(th[i].text);
   }
 
+  // Parse leave rows
   for (int i = 1; i < trDom.length; i++) {
-    final Map<String, dynamic> temp = <String, dynamic>{};
-
     final List<Element> td = trDom[i].getElementsByTagName('td');
-    temp['leaveSheetId'] = td[1].text;
-    temp['date'] = td[2].text;
-    temp['instructorsComment'] = td[3].text;
-    temp['sections'] = <Map<String, dynamic>>[];
+    final List<LeaveSections> sections = <LeaveSections>[];
+
     for (int e = 4; e < td.length; e++) {
-      if (td[e].text == '　') {
-        continue;
-      }
-      (temp['sections'] as List<dynamic>).add(
-        <String, dynamic>{
-          'section': timeCodeList[e - 4],
-          'reason': td[e].text,
-        },
+      if (td[e].text == '　') continue;
+      sections.add(
+        LeaveSections(
+          section: timeCodeList[e - 4],
+          reason: td[e].text,
+        ),
       );
     }
-    dataList.add(temp);
+
+    leaves.add(
+      Leave(
+        leaveSheetId: td[1].text,
+        date: td[2].text,
+        instructorsComment: td[3].text,
+        leaveSections: sections,
+      ),
+    );
   }
-  return <String, dynamic>{
-    'data': dataList,
-    'timeCodes': timeCodeList,
-  };
+
+  return LeaveData(leaves: leaves, timeCodes: timeCodeList);
 }
 
-Map<String, dynamic>? leaveSubmitInfoParser(String? html) {
-  // Leave parser haven't any check, check is unnecessary on this system.
+/// Parses leave submit info from HTML.
+///
+/// Returns a [LeaveSubmitInfoData] object with available leave types,
+/// time codes, and default tutor information.
+LeaveSubmitInfoData? leaveSubmitInfoParser(String? html) {
   final Document document = parse(html);
 
-  //TimeCode generate part.
+  // Parse time codes from grid header
   List<String> timeCodeList = <String>[];
   final List<Element> grids = document.getElementsByClassName('mGrid');
+
   if (grids.isNotEmpty) {
-    final List<Element> timeCode = document
-        .getElementsByClassName('mGrid')[0]
+    final List<Element> timeCode = grids[0]
         .getElementsByTagName('tr')[0]
         .getElementsByTagName('th');
     if (timeCode.length > 5) {
@@ -108,61 +120,59 @@ Map<String, dynamic>? leaveSubmitInfoParser(String? html) {
       }
     }
   } else {
+    // Default time codes if grid not found
     timeCodeList = <String>[
-      'M',
-      '1',
-      '2',
-      '3',
-      '4',
-      'A',
-      '5',
-      '6',
-      '7',
-      '8',
-      '9',
-      '10',
-      '11',
-      '12',
+      'M', '1', '2', '3', '4', 'A', '5', '6', '7', '8', '9', '10', '11', '12',
       '13',
     ];
   }
-  //LeaveType generate part.
-  final List<Map<String, String>> leaveType = <Map<String, String>>[];
 
+  // Parse leave types
+  final List<Type> leaveTypes = <Type>[];
   final List<Element> leaveTypeList =
       document.getElementsByClassName('aspNetDisabled');
-  if (leaveTypeList.length > 1) {
-    for (int i = 1; i < leaveTypeList.length; i++) {
-      final List<Element> labels =
-          leaveTypeList[i].getElementsByTagName('label');
-      final List<Element> inputs =
-          leaveTypeList[i].getElementsByTagName('input');
-      if (labels.isEmpty) continue;
-      leaveType.add(<String, String>{
-        'title': labels[0].text,
-        'id': inputs[0].attributes['value'].toString(),
-      });
-    }
 
-    Map<String, dynamic>? tutorData;
-    //Get default tutor
-    final List<Element> toturSelect = document
-        .getElementById('ContentPlaceHolder1_CK001_ddlTeach')!
-        .getElementsByTagName('option');
-    for (int i = 1; i < toturSelect.length; i++) {
-      if (toturSelect[i].attributes['selected'] != null) {
-        tutorData = <String, dynamic>{
-          'name': toturSelect[i].text,
-          'id': toturSelect[i].attributes['value'],
-        };
+  if (leaveTypeList.length <= 1) {
+    return null;
+  }
+
+  for (int i = 1; i < leaveTypeList.length; i++) {
+    final List<Element> labels =
+        leaveTypeList[i].getElementsByTagName('label');
+    final List<Element> inputs =
+        leaveTypeList[i].getElementsByTagName('input');
+    if (labels.isEmpty) continue;
+
+    leaveTypes.add(
+      Type(
+        title: labels[0].text,
+        id: inputs[0].attributes['value'].toString(),
+      ),
+    );
+  }
+
+  // Parse default tutor
+  Tutor? tutorData;
+  final Element? tutorSelect =
+      document.getElementById('ContentPlaceHolder1_CK001_ddlTeach');
+
+  if (tutorSelect != null) {
+    final List<Element> tutorOptions =
+        tutorSelect.getElementsByTagName('option');
+    for (int i = 1; i < tutorOptions.length; i++) {
+      if (tutorOptions[i].attributes['selected'] != null) {
+        tutorData = Tutor(
+          name: tutorOptions[i].text,
+          id: tutorOptions[i].attributes['value'] ?? '',
+        );
+        break;
       }
     }
-
-    return <String, dynamic>{
-      'tutor': tutorData,
-      'type': leaveType,
-      'timeCodes': timeCodeList,
-    };
   }
-  return null;
+
+  return LeaveSubmitInfoData(
+    tutor: tutorData,
+    type: leaveTypes,
+    timeCodes: timeCodeList,
+  );
 }
