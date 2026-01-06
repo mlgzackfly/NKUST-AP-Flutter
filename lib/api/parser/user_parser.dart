@@ -53,33 +53,34 @@ extension UserParserExtension on WebApParser {
   }
 
   /// Parses user info from HTML.
-  Map<String, dynamic> apUserInfoParser(String? html) {
-    final Map<String, dynamic> data = <String, dynamic>{
-      'educationSystem': null,
-      'department': null,
-      'className': null,
-      'id': null,
-      'name': null,
-      'pictureUrl': null,
-    };
+  ///
+  /// Returns a [UserInfo] object with parsed user data.
+  UserInfo apUserInfoParser(String? html) {
     final Document document = parse(html);
     final List<Element> tdElements = document.getElementsByTagName('td');
+
     if (tdElements.length < 15) {
-      // parse data error.
-      data['id'] = Helper.username;
-      return data;
+      // Parse data error
+      return UserInfo.fromJson(<String, dynamic>{
+        'id': Helper.username ?? '',
+        'name': '',
+        'department': '',
+      });
     }
+
     try {
       final String imageUrl = document
           .getElementsByTagName('img')[0]
           .attributes['src']!
           .substring(2);
-      data['educationSystem'] = tdElements[3].text.replaceAll('學　　制：', '');
-      data['department'] = tdElements[4].text.replaceAll('科　　系：', '');
-      data['className'] = tdElements[8].text.replaceAll('班　　級：', '');
-      data['id'] = tdElements[9].text.replaceAll('學　　號：', '');
-      data['name'] = tdElements[10].text.replaceAll('姓　　名：', '');
-      data['pictureUrl'] = 'https://webap.nkust.edu.tw/nkust$imageUrl';
+      return UserInfo.fromJson(<String, dynamic>{
+        'educationSystem': tdElements[3].text.replaceAll('學　　制：', ''),
+        'department': tdElements[4].text.replaceAll('科　　系：', ''),
+        'className': tdElements[8].text.replaceAll('班　　級：', ''),
+        'id': tdElements[9].text.replaceAll('學　　號：', ''),
+        'name': tdElements[10].text.replaceAll('姓　　名：', ''),
+        'pictureUrl': 'https://webap.nkust.edu.tw/nkust$imageUrl',
+      });
     } catch (e, s) {
       if (FirebaseCrashlyticsUtils.isSupported) {
         CrashlyticsUtil.instance.recordError(
@@ -89,7 +90,11 @@ extension UserParserExtension on WebApParser {
         );
       }
     }
-    return data;
+    return UserInfo.fromJson(<String, dynamic>{
+      'id': Helper.username ?? '',
+      'name': '',
+      'department': '',
+    });
   }
 
   /// Parses webapp to leave transition data from HTML.

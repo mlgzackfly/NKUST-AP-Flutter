@@ -3,59 +3,84 @@ import 'dart:convert';
 import 'package:ap_common/ap_common.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart' as html;
+import 'package:nkust_ap/models/bus_data.dart';
+import 'package:nkust_ap/models/bus_reservations_data.dart';
+import 'package:nkust_ap/models/bus_violation_records_data.dart';
 import 'package:nkust_ap/models/midterm_alerts_data.dart';
 
+/// Bus information for reservation availability.
+class BusInfo {
+  final bool canReserve;
+  final String description;
+
+  const BusInfo({
+    required this.canReserve,
+    required this.description,
+  });
+}
+
 class MobileNkustParser {
-  static List<Map<String, dynamic>> busViolationRecords(
+  /// Parses bus violation records from HTML.
+  ///
+  /// Returns a list of [Reservation] objects.
+  static List<Reservation> busViolationRecords(
     String rawHtml, {
     required bool paidStatus,
   }) {
     final Document document = html.parse(rawHtml);
-    final List<Map<String, dynamic>> result = <Map<String, dynamic>>[];
+    final List<Reservation> result = <Reservation>[];
     final DateFormat format = DateFormat('yyyy/MM/dd HH:mm');
 
     for (final Element trElement in document.getElementsByTagName('tr')) {
-      final Map<String, dynamic> temp = <String, dynamic>{};
-
       final List<Element> tdElements = trElement.getElementsByTagName('td');
       final Element timeElement = tdElements[1].getElementsByTagName('div')[0];
-      temp['isPayment'] = paidStatus;
       final List<String> startAndGoal = tdElements[3].text.split(' 到 ');
-      temp['startStation'] = startAndGoal[0];
-      temp['endStation'] = startAndGoal[1];
-      temp['amountend'] = int.parse(tdElements[4].text);
-      temp['homeCharteredBus'] = false;
 
-      temp['time'] = format.parse(
-        '${timeElement.text.substring(0, 10)} '
-        '${timeElement.text.substring(14)}',
+      result.add(
+        Reservation(
+          time: format.parse(
+            '${timeElement.text.substring(0, 10)} '
+            '${timeElement.text.substring(14)}',
+          ),
+          startStation: startAndGoal[0],
+          endStation: startAndGoal[1],
+          amountend: int.parse(tdElements[4].text),
+          isPayment: paidStatus,
+          homeCharteredBus: false,
+        ),
       );
-      result.add(temp);
     }
     return result;
   }
 
-  static List<Map<String, dynamic>> busUserRecords(
+  /// Parses bus user records from HTML.
+  ///
+  /// Returns a list of [BusReservation] objects.
+  static List<BusReservation> busUserRecords(
     String rawHtml, {
     required String startStation,
     required String endStation,
   }) {
     final Document document = html.parse(rawHtml);
-    final List<Map<String, dynamic>> result = <Map<String, dynamic>>[];
+    final List<BusReservation> result = <BusReservation>[];
 
     for (final Element trElement in document.getElementsByTagName('tr')) {
-      final Map<String, dynamic> temp = <String, dynamic>{};
-      temp['cancelKey'] =
-          trElement.getElementsByTagName('input')[0].attributes['value'];
+      final String cancelKey =
+          trElement.getElementsByTagName('input')[0].attributes['value'] ?? '';
       final List<Element> tdElements = trElement.getElementsByTagName('td');
-
-      temp['dateTime'] = '${tdElements[1].text.substring(0, 10)} '
+      final String dateTime = '${tdElements[1].text.substring(0, 10)} '
           '${tdElements[1].text.substring(14)}';
-      temp['state'] = '';
-      temp['travelState'] = '';
-      temp['start'] = startStation;
-      temp['end'] = endStation;
-      result.add(temp);
+
+      result.add(
+        BusReservation(
+          dateTime: dateTime,
+          cancelKey: cancelKey,
+          start: startStation,
+          end: endStation,
+          state: '',
+          travelState: '',
+        ),
+      );
     }
 
     return result;
@@ -190,9 +215,10 @@ class MobileNkustParser {
     return MidtermAlertsData(courses: courses);
   }
 
-  static Map<String, dynamic> busInfo(
-    String? rawHtml,
-  ) {
+  /// Parses bus info from HTML.
+  ///
+  /// Returns a [BusInfo] object with reservation availability.
+  static BusInfo busInfo(String? rawHtml) {
     final Document document = html.parse(rawHtml);
     final String canNotReserveText =
         document.getElementById('BusMemberStop')!.attributes['value']!;
@@ -205,59 +231,55 @@ class MobileNkustParser {
     if (elements.isNotEmpty) {
       description = elements.first.text;
     }
-    return <String, dynamic>{
-      'canReserve': canReserve,
-      'description': description.trim().replaceAll(' ', ''),
-    };
+    return BusInfo(
+      canReserve: canReserve,
+      description: description.trim().replaceAll(' ', ''),
+    );
   }
 
-  static List<Map<String, dynamic>> busTimeTable(
+  /// Parses bus timetable from HTML.
+  ///
+  /// Returns a list of [BusTime] objects.
+  static List<BusTime> busTimeTable(
     dynamic rawHtml, {
     String? time,
     String? startStation,
     String? endStation,
   }) {
     final Document document = html.parse(rawHtml);
+    final List<BusTime> result = <BusTime>[];
+    final DateFormat format = DateFormat('yyyy/MM/dd HH:mm');
 
-    final List<Map<String, dynamic>> result = <Map<String, dynamic>>[];
+    final List<Element> allRows = document.getElementsByTagName('tr');
+    for (int rowIndex = 1; rowIndex < allRows.length; rowIndex++) {
+      final Element trElement = allRows[rowIndex];
 
-    for (final Element trElement
-        in document.getElementsByTagName('tr').sublist(1)) {
-      final Map<String, dynamic> temp = <String, dynamic>{};
+      // Find input elements by ID attribute within the row
+      // instead of creating a new Document for each row
+      final List<Element> inputElements =
+          trElement.getElementsByTagName('input');
+      final Map<String, String> inputValues = <String, String>{
+        for (final Element input in inputElements)
+          if (input.attributes['id'] != null)
+            input.attributes['id']!: input.attributes['value'] ?? '',
+      };
 
-      // Element can't get ById. so build new parser object.
-      final Document inputDocument = html.parse(trElement.outerHtml);
-      temp['canBook'] = true;
-
-      if (inputDocument.getElementById('ReserveEnable')!.attributes['value'] ==
-          null) {
-        //can't book.
-        temp['canBook'] = false;
-      }
-      temp['busId'] =
-          inputDocument.getElementById('BusId')!.attributes['value'];
-      temp['cancelKey'] =
-          inputDocument.getElementById('ReserveId')!.attributes['value'];
-      temp['isReserve'] = inputDocument
-                  .getElementById('ReserveStateCode')!
-                  .attributes['value'] ==
-              '0' &&
-          inputDocument.getElementById('ReserveId')!.attributes['value'] != '0';
+      final bool canBook = inputValues['ReserveEnable'] != null;
+      final String busId = inputValues['BusId'] ?? '';
+      final String cancelKey = inputValues['ReserveId'] ?? '';
+      final bool isReserve =
+          inputValues['ReserveStateCode'] == '0' && cancelKey != '0';
 
       final List<Element> tdElements =
           trElement.getElementsByTagName('td').sublist(1);
 
-      final DateFormat format = DateFormat('yyyy/MM/dd HH:mm');
+      final DateTime departureTime =
+          format.parse('$time ${tdElements[0].text}');
+      final int reserveCount = int.parse(tdElements[1].text);
 
-      temp['departureTime'] =
-          format.parse('$time ${tdElements[0].text}').toIso8601String();
-      temp['reserveCount'] = int.parse(tdElements[1].text);
-      temp['homeCharteredBus'] = false;
-      temp['specialTrain'] = '';
-      temp['description'] = '';
-      temp['startStation'] = startStation;
-      temp['endStation'] = endStation;
-      temp['limitCount'] = 999;
+      bool homeCharteredBus = false;
+      String specialTrain = '';
+      String? description;
 
       if (tdElements[2].text != '') {
         if (tdElements[2].getElementsByTagName('button').isNotEmpty) {
@@ -267,17 +289,33 @@ class MobileNkustParser {
               .replaceAll(' ', '')
               .replaceAll('\n', '');
           if (typeString == '返鄉專車') {
-            temp['homeCharteredBus'] = true;
+            homeCharteredBus = true;
           }
           if (typeString == '試辦專車') {
-            temp['specialTrain'] = '2';
+            specialTrain = '2';
           }
-          temp['description'] = tdElements[2]
+          description = tdElements[2]
               .getElementsByTagName('button')[0]
               .attributes['data-content'];
         }
       }
-      result.add(temp);
+
+      result.add(
+        BusTime(
+          departureTime: departureTime,
+          startStation: startStation ?? '',
+          endStation: endStation ?? '',
+          busId: busId,
+          reserveCount: reserveCount,
+          limitCount: 999,
+          isReserve: isReserve,
+          specialTrain: specialTrain,
+          description: description,
+          cancelKey: cancelKey,
+          homeCharteredBus: homeCharteredBus,
+          canBook: canBook,
+        ),
+      );
     }
     return result;
   }
@@ -305,61 +343,47 @@ class MobileNkustParser {
         return ScoreData.empty();
       }
       scoresList.add(<String, String>{
-        'title': tdElements.elementAt(0).text,
-        'units': tdElements.elementAt(1).text,
-        'hours': tdElements.elementAt(2).text,
-        'required': tdElements.elementAt(3).text,
-        'at': tdElements.elementAt(4).text,
-        'middleScore': tdElements.elementAt(5).text,
-        'semesterScore': tdElements.elementAt(6).text,
-        'remark': tdElements.elementAt(7).text,
+        'title': tdElements[0].text,
+        'units': tdElements[1].text,
+        'hours': tdElements[2].text,
+        'required': tdElements[3].text,
+        'at': tdElements[4].text,
+        'middleScore': tdElements[5].text,
+        'semesterScore': tdElements[6].text,
+        'remark': tdElements[7].text,
       });
     }
 
     //detail data
-    final Map<String, dynamic> detailData = <String, dynamic>{};
     final List<Element> detailDiv =
         document.getElementsByClassName('text-bold text-info');
 
     if (detailDiv.length < 4) {
       return ScoreData.empty();
     }
-    detailData['average'] = detailDiv
-        .elementAt(0)
-        .parent!
-        .text
-        .replaceAll(detailDiv.elementAt(0).text, '')
-        .replaceAll('\n', '')
-        .replaceAll(' ', '');
-    detailData['average'] = double.parse(detailData['average'] as String);
-    detailData['conduct'] = detailDiv
-        .elementAt(1)
-        .parent!
-        .text
-        .replaceAll(detailDiv.elementAt(1).text, '')
-        .replaceAll('\n', '')
-        .replaceAll(' ', '');
-    detailData['conduct'] = double.parse(detailData['conduct'] as String);
-    detailData['classRank'] = detailDiv
-        .elementAt(2)
-        .parent!
-        .text
-        .replaceAll(detailDiv.elementAt(2).text, '')
-        .replaceAll('\n', '')
-        .replaceAll(' ', '');
 
-    detailData['departmentRank'] = detailDiv
-        .elementAt(3)
-        .parent!
-        .text
-        .replaceAll(detailDiv.elementAt(3).text, '')
-        .replaceAll('\n', '')
-        .replaceAll(' ', '');
+    // Helper to extract clean value from parent text
+    String extractValue(int index) {
+      return detailDiv[index]
+          .parent!
+          .text
+          .replaceAll(detailDiv[index].text, '')
+          .replaceAll('\n', '')
+          .replaceAll(' ', '');
+    }
+
+    final String averageStr = extractValue(0);
+    final String conductStr = extractValue(1);
 
     return ScoreData.fromJson(
       <String, dynamic>{
         'scores': scoresList,
-        'detail': detailData,
+        'detail': <String, dynamic>{
+          'average': double.parse(averageStr),
+          'conduct': double.parse(conductStr),
+          'classRank': extractValue(2),
+          'departmentRank': extractValue(3),
+        },
       },
     );
   }

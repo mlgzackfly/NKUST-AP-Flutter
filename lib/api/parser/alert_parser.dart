@@ -3,10 +3,10 @@ part of 'ap_parser.dart';
 /// Alert-related parsing methods for WebApParser.
 extension AlertParserExtension on WebApParser {
   /// Parses midterm alerts data from HTML.
-  Map<String, dynamic> midtermAlertsParser(String? html) {
-    final Map<String, dynamic> data = <String, dynamic>{
-      'courses': <Map<String, dynamic>>[],
-    };
+  ///
+  /// Returns a [MidtermAlertsData] object with parsed alerts.
+  MidtermAlertsData midtermAlertsParser(String? html) {
+    final List<MidtermAlerts> courses = <MidtermAlerts>[];
 
     final Document document = parse(html);
     final List<Element> table = document.getElementsByTagName('table');
@@ -19,16 +19,16 @@ extension AlertParserExtension on WebApParser {
             continue;
           }
           if (tdData[5].text[0] == '是') {
-            (data['courses'] as List<Map<String, dynamic>>).add(
-              <String, dynamic>{
-                'entry': tdData[0].text,
-                'className': tdData[1].text,
-                'title': tdData[2].text,
-                'group': tdData[3].text,
-                'instructors': tdData[4].text,
-                'reason': tdData[6].text,
-                'remark': tdData[7].text,
-              },
+            courses.add(
+              MidtermAlerts(
+                entry: tdData[0].text,
+                className: tdData[1].text,
+                title: tdData[2].text,
+                group: tdData[3].text,
+                instructors: tdData[4].text,
+                reason: tdData[6].text,
+                remark: tdData[7].text,
+              ),
             );
           }
         }
@@ -37,18 +37,18 @@ extension AlertParserExtension on WebApParser {
             .recordError(e, s, reason: 'midtermAlertsParser');
       }
     }
-    return data;
+    return MidtermAlertsData(courses: courses);
   }
 
   /// Parses reward and penalty data from HTML.
-  Map<String, dynamic> rewardAndPenaltyParser(String? html) {
-    final Map<String, dynamic> data = <String, dynamic>{
-      'data': <Map<String, dynamic>>[],
-    };
+  ///
+  /// Returns a [RewardAndPenaltyData] object with parsed rewards/penalties.
+  RewardAndPenaltyData rewardAndPenaltyParser(String? html) {
+    final List<RewardAndPenalty> items = <RewardAndPenalty>[];
 
     final Document document = parse(html);
     if (document.getElementsByTagName('table').length < 2) {
-      return data;
+      return RewardAndPenaltyData(data: items);
     }
     final List<Element> table = document
         .getElementsByTagName('table')[1]
@@ -63,19 +63,19 @@ extension AlertParserExtension on WebApParser {
         if (tdData[3].text.length < 2) {
           continue;
         }
-        (data['data'] as List<Map<String, dynamic>>).add(
-          <String, dynamic>{
-            'date': tdData[2].text,
-            'type': tdData[3].text,
-            'counts': tdData[4].text,
-            'reason': tdData[5].text,
-          },
+        items.add(
+          RewardAndPenalty(
+            date: tdData[2].text,
+            type: tdData[3].text,
+            counts: tdData[4].text,
+            reason: tdData[5].text,
+          ),
         );
       }
     } on Exception catch (e, s) {
       CrashlyticsUtil.instance
           .recordError(e, s, reason: 'rewardAndPenaltyParser');
     }
-    return data;
+    return RewardAndPenaltyData(data: items);
   }
 }

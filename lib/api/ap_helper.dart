@@ -420,9 +420,8 @@ class WebApHelper extends BaseApiHelper {
   Future<UserInfo> userInfoCrawler() async {
     if (!Helper.isSupportCacheData) {
       final Response<dynamic> query = await apQuery('ag003', null);
-      final UserInfo data = UserInfo.fromJson(
-        WebApParser.instance.apUserInfoParser(query.data as String),
-      );
+      final UserInfo data =
+          WebApParser.instance.apUserInfoParser(query.data as String);
       pictureUrl = data.pictureUrl;
       return data;
     }
@@ -433,16 +432,13 @@ class WebApHelper extends BaseApiHelper {
       cacheExpiredTime: const Duration(hours: 6),
     );
 
-    final Map<String, dynamic> parsedData =
+    final UserInfo parsedData =
         WebApParser.instance.apUserInfoParser(query.data as String);
-    if (parsedData['id'] == null) {
+    if (parsedData.id.isEmpty) {
       cacheManager?.delete(userInfoCacheKey);
     }
-    final UserInfo data = UserInfo.fromJson(
-      WebApParser.instance.apUserInfoParser(query.data as String),
-    );
-    pictureUrl = data.pictureUrl;
-    return data;
+    pictureUrl = parsedData.pictureUrl;
+    return parsedData;
   }
 
   Future<Uint8List?> getUserPicture() async {
@@ -460,9 +456,7 @@ class WebApHelper extends BaseApiHelper {
   Future<SemesterData> semesters() async {
     if (!Helper.isSupportCacheData) {
       final Response<dynamic> query = await apQuery('ag304_01', null);
-      return SemesterData.fromJson(
-        WebApParser.instance.semestersParser(query.data as String),
-      );
+      return WebApParser.instance.semestersParser(query.data as String);
     }
     final Response<dynamic> query = await apQuery(
       'ag304_01',
@@ -470,14 +464,14 @@ class WebApHelper extends BaseApiHelper {
       cacheKey: semesterCacheKey,
       cacheExpiredTime: const Duration(hours: 3),
     );
-    final Map<String, dynamic> parsedData =
+    final SemesterData parsedData =
         WebApParser.instance.semestersParser(query.data as String);
-    if ((parsedData['data'] as List<dynamic>).isEmpty) {
+    if (parsedData.data.isEmpty) {
       //data error delete cache
       cacheManager?.delete(semesterCacheKey);
     }
 
-    return SemesterData.fromJson(parsedData);
+    return parsedData;
   }
 
   Future<Response<Uint8List>> getEnrollmentLetter() async {
@@ -509,9 +503,7 @@ class WebApHelper extends BaseApiHelper {
         'ag008',
         <String, String?>{'arg01': years, 'arg02': semesterValue},
       );
-      return ScoreData.fromJson(
-        WebApParser.instance.scoresParser(query.data as String),
-      );
+      return WebApParser.instance.scoresParser(query.data as String);
     }
     final Response<dynamic> query = await apQuery(
       'ag008',
@@ -520,15 +512,13 @@ class WebApHelper extends BaseApiHelper {
       cacheExpiredTime: const Duration(hours: 6),
     );
 
-    final Map<String, dynamic> parsedData =
+    final ScoreData parsedData =
         WebApParser.instance.scoresParser(query.data as String);
-    if ((parsedData['scores'] as List<dynamic>).isEmpty) {
+    if (parsedData.scores.isEmpty) {
       cacheManager?.delete('${scoresCacheKey}_${years}_$semesterValue');
     }
 
-    return ScoreData.fromJson(
-      parsedData,
-    );
+    return parsedData;
   }
 
   Future<CourseData> getCourseTable({
@@ -544,9 +534,7 @@ class WebApHelper extends BaseApiHelper {
         },
         bytesResponse: true,
       );
-      return CourseData.fromJson(
-        await WebApParser.instance.coursetableParser(query.data),
-      );
+      return WebApParser.instance.coursetableParser(query.data);
     }
     final Response<dynamic> query = await apQuery(
       'ag222',
@@ -555,14 +543,12 @@ class WebApHelper extends BaseApiHelper {
       cacheExpiredTime: const Duration(hours: 6),
       bytesResponse: true,
     );
-    final Map<String, dynamic> parsedData =
+    final CourseData parsedData =
         await WebApParser.instance.coursetableParser(query.data);
-    if ((parsedData['courses'] as List<dynamic>).isEmpty) {
+    if (parsedData.courses.isEmpty) {
       cacheManager?.delete('${coursetableCacheKey}_${year}_$semester');
     }
-    return CourseData.fromJson(
-      parsedData,
-    );
+    return parsedData;
   }
 
   Future<MidtermAlertsData> midtermAlerts(
@@ -574,9 +560,7 @@ class WebApHelper extends BaseApiHelper {
       <String, String?>{'arg01': years, 'arg02': semesterValue},
     );
 
-    return MidtermAlertsData.fromJson(
-      WebApParser.instance.midtermAlertsParser(query.data as String),
-    );
+    return WebApParser.instance.midtermAlertsParser(query.data as String);
   }
 
   Future<RewardAndPenaltyData> rewardAndPenalty(
@@ -588,9 +572,7 @@ class WebApHelper extends BaseApiHelper {
       <String, String?>{'arg01': years, 'arg02': semesterValue},
     );
 
-    return RewardAndPenaltyData.fromJson(
-      WebApParser.instance.rewardAndPenaltyParser(query.data as String),
-    );
+    return WebApParser.instance.rewardAndPenaltyParser(query.data as String);
   }
 
   Future<RoomData> roomList(
@@ -610,9 +592,7 @@ class WebApHelper extends BaseApiHelper {
       },
     );
 
-    return RoomData.fromJson(
-      WebApParser.instance.roomListParser(query.data as String),
-    );
+    return WebApParser.instance.roomListParser(query.data as String);
   }
 
   Future<CourseData> roomCourseTableQuery(
@@ -626,9 +606,7 @@ class WebApHelper extends BaseApiHelper {
       bytesResponse: true,
     );
 
-    return CourseData.fromJson(
-      WebApParser.instance.roomCourseTableQueryParser(query.data),
-    );
+    return WebApParser.instance.roomCourseTableQueryParser(query.data);
   }
 
   Future<void> loginVms() async {

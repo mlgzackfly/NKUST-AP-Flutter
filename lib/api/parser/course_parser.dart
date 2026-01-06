@@ -3,45 +3,49 @@ part of 'ap_parser.dart';
 /// Course and semester parsing methods for WebApParser.
 extension CourseParserExtension on WebApParser {
   /// Parses semester data from HTML.
-  Map<String, dynamic> semestersParser(String? html) {
-    final Map<String, dynamic> data = <String, dynamic>{
-      'data': <Map<String, dynamic>>[],
-      'default': <String, dynamic>{
-        'year': '108',
-        'value': '2',
-        'text': '108學年第二學期(Parse失敗)',
-      },
-    };
-    final Document document = parse(html);
+  ///
+  /// Returns a [SemesterData] object with parsed semesters.
+  SemesterData semestersParser(String? html) {
+    final List<Semester> semesters = <Semester>[];
+    Semester defaultSemester = Semester(
+      year: '108',
+      value: '2',
+      text: '108學年第二學期(Parse失敗)',
+    );
 
+    final Document document = parse(html);
     final List<Element> ymsElements =
         document.getElementById('yms_yms')!.getElementsByTagName('option');
+
     if (ymsElements.length < 30) {
-      //parse fail.
-      return data;
+      // Parse fail - return default
+      return SemesterData(data: semesters, defaultSemester: defaultSemester);
     }
+
     for (int i = 0; i < ymsElements.length; i++) {
-      (data['data'] as List<Map<String, dynamic>>).add(
-        <String, dynamic>{
-          'year': ymsElements[i].attributes['value']!.split('#')[0],
-          'value': ymsElements[i].attributes['value']!.split('#')[1],
-          'text': ymsElements[i].text,
-        },
+      final String value = ymsElements[i].attributes['value'] ?? '';
+      final List<String> parts = value.split('#');
+      if (parts.length < 2) continue;
+
+      final Semester semester = Semester(
+        year: parts[0],
+        value: parts[1],
+        text: ymsElements[i].text,
       );
+      semesters.add(semester);
+
       if (ymsElements[i].attributes['selected'] != null) {
-        //set default
-        data['default'] = <String, dynamic>{
-          'year': ymsElements[i].attributes['value']!.split('#')[0],
-          'value': ymsElements[i].attributes['value']!.split('#')[1],
-          'text': ymsElements[i].text,
-        };
+        defaultSemester = semester;
       }
     }
-    return data;
+
+    return SemesterData(data: semesters, defaultSemester: defaultSemester);
   }
 
   /// Parses course table data from HTML.
-  Future<Map<String, dynamic>> coursetableParser(dynamic html) async {
+  ///
+  /// Returns a [CourseData] object with parsed courses.
+  Future<CourseData> coursetableParser(dynamic html) async {
     dynamic rawHtml;
     if (html is Uint8List) {
       rawHtml = clearTransEncoding(html);
@@ -58,7 +62,7 @@ extension CourseParserExtension on WebApParser {
 
     if (document.getElementsByTagName('table').isEmpty) {
       //table not found
-      return data;
+      return CourseData.fromJson(data);
     }
     try {
       //the top table parse
@@ -163,19 +167,28 @@ extension CourseParserExtension on WebApParser {
       'Sunday',
     ];
     try {
+      // Pre-build course name to index map for O(1) lookup
+      final Map<String, int> courseNameToIndex = <String, int>{
+        for (int i = 0; i < data['courses']!.length; i++)
+          data['courses']![i]['title'] as String: i,
+      };
+
+      // Cache table rows to avoid repeated DOM queries
+      final List<Element> tableRows = table2.getElementsByTagName('tr');
+
       for (int weekdayIndex = 0;
           weekdayIndex < weekdays.length;
           weekdayIndex++) {
         for (int rwaTimeCodeIndex = 1;
             rwaTimeCodeIndex < data['timeCodes']!.length + 1;
             rwaTimeCodeIndex++) {
-          final Element sectionElement =
-              table2.getElementsByTagName('tr')[rwaTimeCodeIndex];
+          final Element sectionElement = tableRows[rwaTimeCodeIndex];
           final List<Element> sectionTds =
               sectionElement.getElementsByTagName('td');
           final Element eachDays = sectionTds[weekdayIndex + 1];
-          final List<String> splitData = eachDays.outerHtml
-              .substring(35, eachDays.outerHtml.length - 11)
+          final String outerHtml = eachDays.outerHtml;
+          final List<String> splitData = outerHtml
+              .substring(35, outerHtml.length - 11)
               .split('<br>');
           if (splitData.length <= 1) {
             continue;
@@ -189,19 +202,18 @@ extension CourseParserExtension on WebApParser {
                 .replaceAll(';', '');
           }
           courseName = courseName.replaceAll('(1週)', '');
-          for (int i = 0; i < data['courses']!.length; i++) {
-            if (data['courses']![i]['title'] == courseName) {
-              for (int j = 0; j < data['timeCodes']!.length; j++) {
-                if (j == rwaTimeCodeIndex - 1) {
-                  (data['courses']![i]['sectionTimes'] as List<dynamic>).add(
-                    <String, dynamic>{
-                      'index': j,
-                      'weekday': weekdayIndex + 1,
-                    },
-                  );
-                }
-              }
-            }
+
+          // O(1) lookup using map
+          final int? courseIndex = courseNameToIndex[courseName];
+          if (courseIndex != null) {
+            final int sectionIndex = rwaTimeCodeIndex - 1;
+            (data['courses']![courseIndex]['sectionTimes'] as List<dynamic>)
+                .add(
+              <String, dynamic>{
+                'index': sectionIndex,
+                'weekday': weekdayIndex + 1,
+              },
+            );
           }
         }
       }
@@ -215,6 +227,6 @@ extension CourseParserExtension on WebApParser {
         );
       }
     }
-    return data;
+    return CourseData.fromJson(data);
   }
 }

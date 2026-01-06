@@ -3,31 +3,33 @@ part of 'ap_parser.dart';
 /// Room and room course table parsing methods for WebApParser.
 extension RoomParserExtension on WebApParser {
   /// Parses room list data from HTML.
-  Map<String, dynamic> roomListParser(String? html) {
-    final Map<String, dynamic> data = <String, dynamic>{
-      'data': <Map<String, dynamic>>[],
-    };
+  ///
+  /// Returns a [RoomData] object with parsed rooms.
+  RoomData roomListParser(String? html) {
+    final List<Room> rooms = <Room>[];
 
     final Document document = parse(html);
     final List<Element> table =
         document.getElementById('room_id')!.getElementsByTagName('option');
     try {
       for (int i = 1; i < table.length; i++) {
-        (data['data'] as List<Map<String, dynamic>>).add(
-          <String, dynamic>{
-            'roomName': table[i].text,
-            'roomId': table[i].attributes['value'] ?? '0035',
-          },
+        rooms.add(
+          Room(
+            name: table[i].text,
+            id: table[i].attributes['value'] ?? '0035',
+          ),
         );
       }
     } on Exception catch (e, s) {
       CrashlyticsUtil.instance.recordError(e, s, reason: 'roomListParser');
     }
-    return data;
+    return RoomData(data: rooms);
   }
 
   /// Parses room course table data from HTML.
-  Map<String, dynamic> roomCourseTableQueryParser(dynamic html) {
+  ///
+  /// Returns a [CourseData] object with parsed course table.
+  CourseData roomCourseTableQueryParser(dynamic html) {
     dynamic rawHtml;
 
     if (html is Uint8List) {
@@ -136,28 +138,30 @@ extension RoomParserExtension on WebApParser {
     String tmpCourseName = '';
     try {
       final Map<String, dynamic> tempTime = <String, dynamic>{};
+
+      // Cache table and rows to avoid repeated DOM queries
+      final Element table2 = document.getElementsByTagName('table')[1];
+      final List<Element> tableRows = table2.getElementsByTagName('tr');
+      final int timeCodesLength =
+          (courseTable['timeCodes'] as List<dynamic>).length;
+
       for (int key = 0; key < keyName.length; key++) {
         for (int eachSession = 1;
-            eachSession <
-                (courseTable['timeCodes'] as List<dynamic>).length + 1;
+            eachSession < timeCodesLength + 1;
             eachSession++) {
-          final Element eachDays = document
-              .getElementsByTagName('table')[1]
-              .getElementsByTagName('tr')[eachSession]
-              .getElementsByTagName('td')[key + 1];
+          final Element rowElement = tableRows[eachSession];
+          final List<Element> rowTds = rowElement.getElementsByTagName('td');
+          final Element eachDays = rowTds[key + 1];
 
-          final List<String> splitData = eachDays.outerHtml
+          final String eachDaysOuterHtml = eachDays.outerHtml;
+          final List<String> splitData = eachDaysOuterHtml
               .substring(
-                eachDays.outerHtml.indexOf('; font-family: 細明體') + 20,
-                eachDays.outerHtml.indexOf(';</font>'),
+                eachDaysOuterHtml.indexOf('; font-family: 細明體') + 20,
+                eachDaysOuterHtml.indexOf(';</font>'),
               )
               .split('<br>');
 
-          final String eachDaysDate = document
-              .getElementsByTagName('table')[1]
-              .getElementsByTagName('tr')[eachSession]
-              .getElementsByTagName('td')[0]
-              .outerHtml;
+          final String eachDaysDate = rowTds[0].outerHtml;
 
           final List<String> courseTime = eachDaysDate
               .substring(
@@ -168,14 +172,18 @@ extension RoomParserExtension on WebApParser {
           String tempSection =
               courseTime[0].replaceAll(' ', '').replaceAll(specialSpace, '');
           tempSection = tempSection.substring(1, tempSection.length - 1);
+
+          // Cache split result to avoid repeated string operations
+          final List<String> timeParts = courseTime[1].split('-');
+          final String startTime =
+              '${timeParts[0].substring(0, 2)}:${timeParts[0].substring(2, 4)}';
+          final String endTime =
+              '${timeParts[1].substring(0, 2)}:${timeParts[1].substring(2, 4)}';
+
           tempTime.addAll(<String, dynamic>{
             tempSection: <String, dynamic>{
-              'startTime':
-                  //ignore: lines_longer_than_80_chars
-                  "${courseTime[1].split('-')[0].substring(0, 2)}:${courseTime[1].split('-')[0].substring(2, 4)}",
-              'endTime':
-                  //ignore: lines_longer_than_80_chars
-                  "${courseTime[1].split('-')[1].substring(0, 2)}:${courseTime[1].split('-')[1].substring(2, 4)}",
+              'startTime': startTime,
+              'endTime': endTime,
               'section': tempSection,
             },
           });
@@ -196,12 +204,8 @@ extension RoomParserExtension on WebApParser {
             <String, dynamic>{
               'title': title.replaceAll('&nbsp;', ''),
               'date': <String, dynamic>{
-                'startTime':
-                    //ignore: lines_longer_than_80_chars
-                    "${courseTime[1].split('-')[0].substring(0, 2)}:${courseTime[1].split('-')[0].substring(2, 4)}",
-                'endTime':
-                    //ignore: lines_longer_than_80_chars
-                    "${courseTime[1].split('-')[1].substring(0, 2)}:${courseTime[1].split('-')[1].substring(2, 4)}",
+                'startTime': startTime,
+                'endTime': endTime,
                 'section': tempSection,
               },
               'rawInstructors': splitData[1]
@@ -260,6 +264,6 @@ extension RoomParserExtension on WebApParser {
           .recordError(e, s, reason: 'course name = $tmpCourseName');
     }
 
-    return data;
+    return CourseData.fromJson(data);
   }
 }

@@ -11,12 +11,15 @@ import 'package:nkust_ap/api/ap_status_code.dart';
 import 'package:nkust_ap/api/api_endpoints.dart';
 import 'package:nkust_ap/api/base_api_helper.dart';
 import 'package:nkust_ap/api/mixins/cookie_manageable.dart';
-import 'package:nkust_ap/api/parser/mobile_nkust_parser.dart';
+import 'package:nkust_ap/api/parser/mobile_nkust_parser.dart'
+    show BusInfo, MobileNkustParser;
 import 'package:nkust_ap/config/constants.dart';
 import 'package:nkust_ap/models/booking_bus_data.dart';
-import 'package:nkust_ap/models/bus_data.dart';
-import 'package:nkust_ap/models/bus_reservations_data.dart';
-import 'package:nkust_ap/models/bus_violation_records_data.dart';
+import 'package:nkust_ap/models/bus_data.dart' show BusData, BusTime;
+import 'package:nkust_ap/models/bus_reservations_data.dart'
+    show BusReservation, BusReservationsData;
+import 'package:nkust_ap/models/bus_violation_records_data.dart'
+    show BusViolationRecordsData, Reservation;
 import 'package:nkust_ap/models/cancel_bus_data.dart';
 import 'package:nkust_ap/models/login_response.dart';
 import 'package:nkust_ap/models/midterm_alerts_data.dart';
@@ -343,8 +346,7 @@ class MobileNkustHelper extends BaseApiHelper with CookieManageable {
       ),
     );
 
-    final Map<String, dynamic> busInfo =
-        MobileNkustParser.busInfo(request.data);
+    final BusInfo busInfo = MobileNkustParser.busInfo(request.data);
 
     final List<Response<dynamic>> requestsList = <Response<dynamic>>[];
     final List<List<String>> requestsDataList = <List<String>>[
@@ -370,10 +372,10 @@ class MobileNkustHelper extends BaseApiHelper with CookieManageable {
       requestsList.add(r);
     }
 
-    final List<Map<String, dynamic>> result = <Map<String, dynamic>>[];
+    final List<BusTime> timetable = <BusTime>[];
 
     for (int i = 0; i < requestsList.length; i++) {
-      result.addAll(
+      timetable.addAll(
         MobileNkustParser.busTimeTable(
           await requestsList[i].data,
           time: '$year/$month/$day',
@@ -382,13 +384,11 @@ class MobileNkustHelper extends BaseApiHelper with CookieManageable {
         ),
       );
     }
-    final BusData busData = BusData.fromJson(
-      <String, dynamic>{
-        'data': result,
-        ...busInfo,
-      },
+    return BusData(
+      canReserve: busInfo.canReserve,
+      description: busInfo.description,
+      timetable: timetable,
     );
-    return busData;
   }
 
   Future<BookingBusData> busBook({
@@ -470,11 +470,11 @@ class MobileNkustHelper extends BaseApiHelper with CookieManageable {
       requestsList.add(r);
     }
 
-    final List<Map<String, dynamic>> result = <Map<String, dynamic>>[];
+    final List<BusReservation> reservations = <BusReservation>[];
 
     for (int i = 0; i < requestsList.length; i++) {
       // add <table> tag to avoid parser error.
-      result.addAll(
+      reservations.addAll(
         MobileNkustParser.busUserRecords(
           '<table>${await requestsList[i].data}</table>',
           startStation: requestsDataList[i][0],
@@ -483,12 +483,7 @@ class MobileNkustHelper extends BaseApiHelper with CookieManageable {
       );
     }
 
-    final BusReservationsData busReservationsData =
-        BusReservationsData.fromJson(<String, dynamic>{
-      'data': result,
-    });
-
-    return busReservationsData;
+    return BusReservationsData(reservations: reservations);
   }
 
   Future<BusViolationRecordsData> busViolationRecords() async {
@@ -525,25 +520,20 @@ class MobileNkustHelper extends BaseApiHelper with CookieManageable {
       },
     );
 
-    final List<Map<String, dynamic>> result = <Map<String, dynamic>>[];
-    result.addAll(
+    final List<Reservation> reservations = <Reservation>[];
+    reservations.addAll(
       MobileNkustParser.busViolationRecords(
         '<table> ${paidRequest.data} </table>',
         paidStatus: true,
       ),
     );
-    result.addAll(
+    reservations.addAll(
       MobileNkustParser.busViolationRecords(
         '<table> ${notPaidRequest.data} </table>',
         paidStatus: false,
       ),
     );
 
-    final BusViolationRecordsData busViolationRecordsData =
-        BusViolationRecordsData.fromJson(
-      <String, dynamic>{'reservation': result},
-    );
-
-    return busViolationRecordsData;
+    return BusViolationRecordsData(reservations: reservations);
   }
 }

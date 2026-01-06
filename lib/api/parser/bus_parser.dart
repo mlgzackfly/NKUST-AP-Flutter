@@ -3,8 +3,8 @@ import 'package:nkust_ap/models/bus_data.dart';
 import 'package:nkust_ap/models/bus_reservations_data.dart';
 import 'package:nkust_ap/models/bus_violation_records_data.dart';
 
-/// Converts a timestamp from the bus API to an ISO 8601 datetime string.
-String busRealTime(dynamic timestamp) {
+/// Converts a timestamp from the bus API to a DateTime.
+DateTime busTimestampToDateTime(dynamic timestamp) {
   late int time;
   if (timestamp is String) {
     time = int.parse(timestamp);
@@ -15,11 +15,15 @@ String busRealTime(dynamic timestamp) {
   } else {
     throw ArgumentError('Invalid timestamp type: ${timestamp.runtimeType}');
   }
-  final DateTime date = DateTime.fromMillisecondsSinceEpoch(
+  return DateTime.fromMillisecondsSinceEpoch(
     ((time / 10000000 - 62135596800) * 1000).round(),
   );
-  return date.toIso8601String();
 }
+
+/// Legacy function for backward compatibility.
+/// Converts a timestamp to an ISO 8601 datetime string.
+String busRealTime(dynamic timestamp) =>
+    busTimestampToDateTime(timestamp).toIso8601String();
 
 /// Converts an integer to a boolean (0 = false, non-zero = true).
 bool intToBool(int a) => a != 0;
@@ -34,32 +38,36 @@ BusData busTimeTableParser(
   final List<BusTime> busTimes = <BusTime>[];
   final List<dynamic> rawList = data['data'] as List<dynamic>;
 
+  // Pre-create DateFormat outside loop for performance
+  final DateFormat format = DateFormat('yyyy/MM/dd HH:mm');
+
+  // Pre-parse reservation dateTimes for O(1) lookup
+  final Map<String, String>? reservationMap = busReservations != null
+      ? <String, String>{
+          for (final BusReservation r in busReservations.reservations)
+            '${format.parse(r.dateTime).toIso8601String()}_${r.start}':
+                r.cancelKey,
+        }
+      : null;
+
   for (int i = 0; i < rawList.length; i++) {
     final Map<String, dynamic> item = rawList[i] as Map<String, dynamic>;
     final String specialTrain = item['SpecialTrain']?.toString() ?? '0';
     final bool isHomeCharteredBus = specialTrain == '1';
 
     String cancelKey = '';
-    if (busReservations != null) {
-      final DateFormat format = DateFormat('yyyy/MM/dd HH:mm');
+    if (reservationMap != null) {
       final DateTime departureDateTime =
-          format.parse(busRealTime(item['runDateTime']));
-
-      for (final BusReservation reservation in busReservations.reservations) {
-        if (format.parse(reservation.dateTime) == departureDateTime &&
-            reservation.start == item['startStation']) {
-          cancelKey = reservation.cancelKey;
-          break;
-        }
-      }
+          busTimestampToDateTime(item['runDateTime']);
+      final String key =
+          '${departureDateTime.toIso8601String()}_${item['startStation']}';
+      cancelKey = reservationMap[key] ?? '';
     }
 
     busTimes.add(
       BusTime(
-        endEnrollDateTime: DateTime.parse(
-          busRealTime(item['EndEnrollDateTime']),
-        ),
-        departureTime: DateTime.parse(busRealTime(item['runDateTime'])),
+        endEnrollDateTime: busTimestampToDateTime(item['EndEnrollDateTime']),
+        departureTime: busTimestampToDateTime(item['runDateTime']),
         startStation: item['startStation'] as String,
         endStation: item['endStation'] as String,
         busId: item['busId'].toString(),
@@ -117,7 +125,7 @@ BusViolationRecordsData busViolationRecordsParser(Map<String, dynamic> data) {
 
     reservations.add(
       Reservation(
-        time: DateTime.parse(busRealTime(map['runBus'])),
+        time: busTimestampToDateTime(map['runBus']),
         startStation: map['start'] as String,
         endStation: map['end'] as String,
         amountend: _parseAmount(map['costMoney']),

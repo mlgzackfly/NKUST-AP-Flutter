@@ -6,6 +6,9 @@ import 'package:flutter/foundation.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:nkust_ap/api/helper.dart';
+import 'package:nkust_ap/models/midterm_alerts_data.dart';
+import 'package:nkust_ap/models/reward_and_penalty_data.dart';
+import 'package:nkust_ap/models/room_data.dart';
 
 part 'alert_parser.dart';
 part 'course_parser.dart';
