@@ -9,6 +9,7 @@ import 'package:nkust_ap/api/api_endpoints.dart';
 import 'package:nkust_ap/api/base_api_helper.dart';
 import 'package:nkust_ap/api/helper.dart';
 import 'package:nkust_ap/api/mixins/cookie_manageable.dart';
+import 'package:nkust_ap/api/mixins/retryable.dart';
 import 'package:nkust_ap/api/parser/leave_parser.dart';
 import 'package:nkust_ap/models/leave_data.dart';
 import 'package:nkust_ap/models/leave_submit_data.dart';
@@ -37,9 +38,6 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
     _instance?.dispose();
     _instance = null;
   }
-
-  int reLoginReTryCountsLimit = 3;
-  int reLoginReTryCounts = 0;
 
   bool? isLogin;
 
@@ -112,14 +110,14 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
 
   Future<LeaveData> getLeaves({String? year, String? semester}) async {
     if (Helper.username == null || Helper.password == null) {
-      throw StateError('Retry limit exceeded');
+      throw RetryLimitExceededException('Username or password not set');
     }
-    if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw StateError('Retry limit exceeded');
+    if (!canRetry) {
+      throw RetryLimitExceededException();
     }
     if (!(isLogin ?? false)) {
       await WebApHelper.instance.loginToLeave();
-      reLoginReTryCounts++;
+      incrementRetryCount();
     }
     final Response<String> res = await dio.get<String>(
       ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveQuery),
@@ -143,14 +141,14 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
 
   Future<LeaveSubmitInfoData> getLeavesSubmitInfo() async {
     if (Helper.username == null || Helper.password == null) {
-      throw StateError('Retry limit exceeded');
+      throw RetryLimitExceededException('Username or password not set');
     }
-    if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw StateError('Retry limit exceeded');
+    if (!canRetry) {
+      throw RetryLimitExceededException();
     }
     if (!(isLogin ?? false)) {
       await WebApHelper.instance.loginToLeave();
-      reLoginReTryCounts++;
+      incrementRetryCount();
     }
     Response<String> res = await dio.get<String>(
       ApiEndpoints.getLeaveUrl(ApiEndpoints.leaveSubmit),

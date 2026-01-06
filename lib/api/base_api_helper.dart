@@ -6,6 +6,7 @@ import 'package:dio/io.dart';
 import 'package:dio_http_cache/dio_http_cache.dart';
 import 'package:native_dio_adapter/native_dio_adapter.dart';
 import 'package:nkust_ap/api/helper.dart';
+import 'package:nkust_ap/api/mixins/retryable.dart';
 import 'package:nkust_ap/config/constants.dart';
 
 /// Base class for all API helpers providing common functionality.
@@ -15,7 +16,8 @@ import 'package:nkust_ap/config/constants.dart';
 /// - Cookie management
 /// - Proxy configuration
 /// - Cache management
-abstract class BaseApiHelper {
+/// - Retry logic via [Retryable] mixin
+abstract class BaseApiHelper with Retryable {
   late Dio dio;
   late CookieJar cookieJar;
   DioCacheManager? _cacheManager;

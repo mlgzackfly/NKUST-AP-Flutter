@@ -6,6 +6,7 @@ import 'package:dio_http_cache/dio_http_cache.dart';
 import 'package:nkust_ap/api/api_endpoints.dart';
 import 'package:nkust_ap/api/base_api_helper.dart';
 import 'package:nkust_ap/api/helper.dart';
+import 'package:nkust_ap/api/mixins/retryable.dart';
 import 'package:nkust_ap/api/parser/api_tool.dart';
 import 'package:nkust_ap/api/parser/bus_parser.dart';
 import 'package:nkust_ap/models/booking_bus_data.dart';
@@ -122,8 +123,9 @@ class BusHelper extends BaseApiHelper {
 
   static BusHelper? _instance;
 
-  static int reLoginReTryCountsLimit = 5;
-  static int reLoginReTryCounts = 0;
+  /// Bus API has higher retry limit due to frequent session timeouts.
+  @override
+  int get retryLimit => 5;
 
   bool isLogin = false;
 
@@ -208,8 +210,8 @@ class BusHelper extends BaseApiHelper {
     required String month,
     required String day,
   }) async {
-    if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw StateError('Retry limit exceeded');
+    if (!canRetry) {
+      throw RetryLimitExceededException();
     }
 
     if (!isLogin) {
@@ -268,19 +270,19 @@ class BusHelper extends BaseApiHelper {
       if (Helper.isSupportCacheData) {
         cacheManager?.delete(userTimeTableSelectCacheKey!);
       }
-      reLoginReTryCounts += 1;
+      incrementRetryCount();
       await busLogin();
       return timeTableQuery(year: year, month: month, day: day);
     }
-    reLoginReTryCounts = 0;
+    resetRetryCount();
     return BusData.fromJson(
       busTimeTableParser(res.data!, busReservations: await userRecord),
     );
   }
 
   Future<BookingBusData> busBook({required String busId}) async {
-    if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw StateError('Retry limit exceeded');
+    if (!canRetry) {
+      throw RetryLimitExceededException();
     }
 
     if (!isLogin) {
@@ -301,7 +303,7 @@ class BusHelper extends BaseApiHelper {
 
     if (res.data!['code'] == 400 &&
         (res.data!['message'] as String).contains('未登入或是登入逾')) {
-      reLoginReTryCounts += 1;
+      incrementRetryCount();
       await busLogin();
       return busBook(busId: busId);
     }
@@ -309,8 +311,8 @@ class BusHelper extends BaseApiHelper {
   }
 
   Future<CancelBusData> busUnBook({required String busId}) async {
-    if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw StateError('Retry limit exceeded');
+    if (!canRetry) {
+      throw RetryLimitExceededException();
     }
 
     if (!isLogin) {
@@ -326,7 +328,7 @@ class BusHelper extends BaseApiHelper {
 
     if (res.data!['code'] == 400 &&
         (res.data!['message'] as String).contains('未登入或是登入逾')) {
-      reLoginReTryCounts += 1;
+      incrementRetryCount();
       await busLogin();
       return busUnBook(busId: busId);
     }
@@ -338,8 +340,8 @@ class BusHelper extends BaseApiHelper {
   }
 
   Future<BusReservationsData> busReservations() async {
-    if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw StateError('Retry limit exceeded');
+    if (!canRetry) {
+      throw RetryLimitExceededException();
     }
 
     if (!isLogin) {
@@ -377,19 +379,19 @@ class BusHelper extends BaseApiHelper {
     if (res.data!['code'] == 400 &&
         (res.data!['message'] as String).contains('未登入或是登入逾')) {
       if (Helper.isSupportCacheData) cacheManager?.delete(userRecordsCacheKey);
-      reLoginReTryCounts += 1;
+      incrementRetryCount();
       await busLogin();
       return busReservations();
     }
-    reLoginReTryCounts = 0;
+    resetRetryCount();
     return BusReservationsData.fromJson(
       busReservationsParser(res.data!),
     );
   }
 
   Future<BusViolationRecordsData> busViolationRecords() async {
-    if (reLoginReTryCounts > reLoginReTryCountsLimit) {
-      throw StateError('Retry limit exceeded');
+    if (!canRetry) {
+      throw RetryLimitExceededException();
     }
 
     if (!isLogin) {
@@ -429,11 +431,11 @@ class BusHelper extends BaseApiHelper {
       if (Helper.isSupportCacheData) {
         cacheManager?.delete(userViolationRecordsCacheKey);
       }
-      reLoginReTryCounts += 1;
+      incrementRetryCount();
       await busLogin();
       return busViolationRecords();
     }
-    reLoginReTryCounts = 0;
+    resetRetryCount();
     return BusViolationRecordsData.fromJson(
       busViolationRecordsParser(res.data!),
     );

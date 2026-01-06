@@ -535,7 +535,7 @@ class Helper {
         error: e,
         stackTrace: s,
         callback: callback,
-        onHasResponse: () => BusHelper.reLoginReTryCounts = 0,
+        onHasResponse: () => BusHelper.instance.resetRetryCount(),
       );
     }
   }
@@ -558,7 +558,7 @@ class Helper {
         error: e,
         stackTrace: s,
         callback: callback,
-        onHasResponse: () => BusHelper.reLoginReTryCounts = 0,
+        onHasResponse: () => BusHelper.instance.resetRetryCount(),
       );
     }
   }
@@ -582,7 +582,7 @@ class Helper {
         error: e,
         stackTrace: s,
         callback: callback,
-        onHasResponse: () => BusHelper.reLoginReTryCounts = 0,
+        onHasResponse: () => BusHelper.instance.resetRetryCount(),
       );
     }
   }
@@ -606,7 +606,7 @@ class Helper {
         error: e,
         stackTrace: s,
         callback: callback,
-        onHasResponse: () => BusHelper.reLoginReTryCounts = 0,
+        onHasResponse: () => BusHelper.instance.resetRetryCount(),
       );
     }
   }
@@ -629,7 +629,7 @@ class Helper {
         error: e,
         stackTrace: s,
         callback: callback,
-        onHasResponse: () => BusHelper.reLoginReTryCounts = 0,
+        onHasResponse: () => BusHelper.instance.resetRetryCount(),
       );
     }
   }

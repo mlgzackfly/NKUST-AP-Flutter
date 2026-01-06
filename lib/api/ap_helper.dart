@@ -20,9 +20,6 @@ import 'package:nkust_ap/utils/captcha_utils.dart';
 class WebApHelper extends BaseApiHelper {
   static WebApHelper? _instance;
 
-  static int reLoginReTryCountsLimit = 3;
-  static int reLoginReTryCounts = 0;
-
   bool isLogin = false;
 
   String? pictureUrl;
@@ -172,7 +169,7 @@ class WebApHelper extends BaseApiHelper {
 
   Future<LoginResponse> loginToMobile() async {
     // Login leave.nkust from webap.
-    if (reLoginReTryCounts > reLoginReTryCountsLimit) {
+    if (!canRetry) {
       throw GeneralResponse(
         statusCode: ApStatusCode.networkConnectFail,
         message: 'Login exceeded retry limit',
@@ -213,7 +210,7 @@ class WebApHelper extends BaseApiHelper {
 
   Future<LoginResponse> loginToOosaf() async {
     // Login oosaf.nkust from webap.
-    if (reLoginReTryCounts > reLoginReTryCountsLimit) {
+    if (!canRetry) {
       throw GeneralResponse(
         statusCode: ApStatusCode.networkConnectFail,
         message: 'Login exceeded retry limit',
@@ -254,7 +251,7 @@ class WebApHelper extends BaseApiHelper {
 
   Future<LoginResponse> loginToStdsys() async {
     // Login stdsys.nkust from webap.
-    if (reLoginReTryCounts > reLoginReTryCountsLimit) {
+    if (!canRetry) {
       throw GeneralResponse(
         statusCode: ApStatusCode.networkConnectFail,
         message: 'Login exceeded retry limit',
@@ -295,7 +292,7 @@ class WebApHelper extends BaseApiHelper {
 
   Future<LoginResponse> loginToLeave() async {
     // Login leave.nkust from webap.
-    if (reLoginReTryCounts > reLoginReTryCountsLimit) {
+    if (!canRetry) {
       throw GeneralResponse(
         statusCode: ApStatusCode.networkConnectFail,
         message: 'Login exceeded retry limit',
@@ -361,7 +358,7 @@ class WebApHelper extends BaseApiHelper {
     /*
     Retrun type Response <Dio>
     */
-    if (reLoginReTryCounts > reLoginReTryCountsLimit) {
+    if (!canRetry) {
       throw GeneralResponse(
         statusCode: ApStatusCode.networkConnectFail,
         message: 'Login exceeded retry limit',
@@ -412,11 +409,11 @@ class WebApHelper extends BaseApiHelper {
 
     if (WebApParser.instance.apLoginParser(request.data) == 2) {
       if (Helper.isSupportCacheData) cacheManager?.delete(cacheKey!);
-      reLoginReTryCounts += 1;
+      incrementRetryCount();
       await login(username: Helper.username!, password: Helper.password!);
       return apQuery(queryQid, queryData, bytesResponse: bytesResponse);
     }
-    reLoginReTryCounts = 0;
+    resetRetryCount();
     return request;
   }
 
