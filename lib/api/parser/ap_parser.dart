@@ -223,7 +223,9 @@ class WebApParser {
             ? double.parse(matches.elementAt(1).group(1)!)
             : 0.0,
       };
-    } catch (_) {}
+    } catch (e, s) {
+      CrashlyticsUtil.instance.recordError(e, s, reason: 'scoreParser detail');
+    }
     //scores part
 
     try {
@@ -244,7 +246,9 @@ class WebApParser {
           },
         );
       }
-    } catch (_) {}
+    } catch (e, s) {
+      CrashlyticsUtil.instance.recordError(e, s, reason: 'scoreParser scores');
+    }
     return data;
   }
 
@@ -454,7 +458,10 @@ class WebApParser {
             );
           }
         }
-      } on Exception catch (_) {}
+      } on Exception catch (e, s) {
+        CrashlyticsUtil.instance
+            .recordError(e, s, reason: 'midtermAlertsParser');
+      }
     }
     return data;
   }
@@ -490,7 +497,10 @@ class WebApParser {
           },
         );
       }
-    } on Exception catch (_) {}
+    } on Exception catch (e, s) {
+      CrashlyticsUtil.instance
+          .recordError(e, s, reason: 'rewardAndPenaltyParser');
+    }
     return data;
   }
 
@@ -511,7 +521,9 @@ class WebApParser {
           },
         );
       }
-    } on Exception catch (_) {}
+    } on Exception catch (e, s) {
+      CrashlyticsUtil.instance.recordError(e, s, reason: 'roomListParser');
+    }
     return data;
   }
 
@@ -584,7 +596,10 @@ class WebApParser {
         }
       }
       data['courses'] = courses;
-    } on Exception catch (_) {}
+    } on Exception catch (e, s) {
+      CrashlyticsUtil.instance
+          .recordError(e, s, reason: 'roomCourseTableQueryParser courses');
+    }
 
     //the second talbe.
 
@@ -603,7 +618,10 @@ class WebApParser {
           temptext = temptext.substring(1, temptext.length - 1);
           (courseTable['timeCodes'] as List<String>).add(temptext);
         }
-      } on Exception catch (_) {}
+      } on Exception catch (e, s) {
+        CrashlyticsUtil.instance
+            .recordError(e, s, reason: 'roomCourseTableQueryParser timeCodes');
+      }
     }
     //make each day.
     final List<String> keyName = <String>[
