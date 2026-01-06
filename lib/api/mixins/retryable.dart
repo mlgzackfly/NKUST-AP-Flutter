@@ -1,12 +1,8 @@
-/// Exception thrown when retry limit is exceeded.
-class RetryLimitExceededException implements Exception {
-  RetryLimitExceededException([this.message = 'Retry limit exceeded']);
+import 'package:nkust_ap/api/api_exceptions.dart';
 
-  final String message;
-
-  @override
-  String toString() => 'RetryLimitExceededException: $message';
-}
+// Re-export RetryLimitExceededException for backward compatibility
+export 'package:nkust_ap/api/api_exceptions.dart'
+    show RetryLimitExceededException;
 
 /// Mixin providing retry logic for API operations.
 ///
@@ -50,8 +46,8 @@ mixin Retryable {
   /// Throws [RetryLimitExceededException] if retry limit is exceeded.
   void checkRetryLimit() {
     if (!canRetry) {
-      throw RetryLimitExceededException(
-        'Exceeded retry limit of $retryLimit attempts',
+      throw const RetryLimitExceededException(
+        'Exceeded retry limit',
       );
     }
   }

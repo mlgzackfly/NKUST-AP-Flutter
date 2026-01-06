@@ -212,7 +212,7 @@ class BusHelper extends BaseApiHelper {
     required String day,
   }) async {
     if (!canRetry) {
-      throw RetryLimitExceededException();
+      throw const RetryLimitExceededException();
     }
 
     if (!isLogin) {
@@ -283,7 +283,7 @@ class BusHelper extends BaseApiHelper {
 
   Future<BookingBusData> busBook({required String busId}) async {
     if (!canRetry) {
-      throw RetryLimitExceededException();
+      throw const RetryLimitExceededException();
     }
 
     if (!isLogin) {
@@ -313,7 +313,7 @@ class BusHelper extends BaseApiHelper {
 
   Future<CancelBusData> busUnBook({required String busId}) async {
     if (!canRetry) {
-      throw RetryLimitExceededException();
+      throw const RetryLimitExceededException();
     }
 
     if (!isLogin) {
@@ -342,7 +342,7 @@ class BusHelper extends BaseApiHelper {
 
   Future<BusReservationsData> busReservations() async {
     if (!canRetry) {
-      throw RetryLimitExceededException();
+      throw const RetryLimitExceededException();
     }
 
     if (!isLogin) {
@@ -392,7 +392,7 @@ class BusHelper extends BaseApiHelper {
 
   Future<BusViolationRecordsData> busViolationRecords() async {
     if (!canRetry) {
-      throw RetryLimitExceededException();
+      throw const RetryLimitExceededException();
     }
 
     if (!isLogin) {

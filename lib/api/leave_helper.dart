@@ -91,10 +91,10 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
 
   Future<LeaveData> getLeaves({String? year, String? semester}) async {
     if (Helper.username == null || Helper.password == null) {
-      throw RetryLimitExceededException('Username or password not set');
+      throw const RetryLimitExceededException('Username or password not set');
     }
     if (!canRetry) {
-      throw RetryLimitExceededException();
+      throw const RetryLimitExceededException();
     }
     if (!(isLogin ?? false)) {
       await WebApHelper.instance.loginToLeave();
@@ -122,10 +122,10 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
 
   Future<LeaveSubmitInfoData> getLeavesSubmitInfo() async {
     if (Helper.username == null || Helper.password == null) {
-      throw RetryLimitExceededException('Username or password not set');
+      throw const RetryLimitExceededException('Username or password not set');
     }
     if (!canRetry) {
-      throw RetryLimitExceededException();
+      throw const RetryLimitExceededException();
     }
     if (!(isLogin ?? false)) {
       await WebApHelper.instance.loginToLeave();
