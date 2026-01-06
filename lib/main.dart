@@ -20,7 +20,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-//  HttpClient.enableTimelineLogging = isInDebugMode;
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   final ByteData data = await PlatformAssetBundle().load(
     'assets/ca/twca_nkust.cer',

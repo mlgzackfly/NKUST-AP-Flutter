@@ -90,6 +90,21 @@ class Constants {
   // Crawler config
   static const int timeoutMs = 5000;
 
+  // API retry limits
+  static const int defaultRetryLimit = 3;
+  static const int busRetryLimit = 5;
+  static const int captchaMaxRetries = 5;
+
+  // API pagination
+  static const int busTimeTablePageSize = 90;
+  static const int busViolationPageSize = 200;
+  static const int mobilePageSize = 99;
+
+  // Cache durations
+  static const Duration defaultCacheDuration = Duration(seconds: 60);
+  static const Duration semesterCacheDuration = Duration(hours: 3);
+  static const Duration userInfoCacheDuration = Duration(hours: 6);
+
   static const String canUseBus = 'can_use_bus';
   static const String hasBusViolation = 'has_bus_violation';
 

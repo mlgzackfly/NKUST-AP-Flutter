@@ -9,6 +9,7 @@ import 'package:nkust_ap/api/helper.dart';
 import 'package:nkust_ap/api/mixins/retryable.dart';
 import 'package:nkust_ap/api/parser/api_tool.dart';
 import 'package:nkust_ap/api/parser/bus_parser.dart';
+import 'package:nkust_ap/config/constants.dart';
 import 'package:nkust_ap/models/booking_bus_data.dart';
 import 'package:nkust_ap/models/bus_data.dart';
 import 'package:nkust_ap/models/bus_reservations_data.dart';
@@ -125,7 +126,7 @@ class BusHelper extends BaseApiHelper {
 
   /// Bus API has higher retry limit due to frequent session timeouts.
   @override
-  int get retryLimit => 5;
+  int get retryLimit => Constants.busRetryLimit;
 
   bool isLogin = false;
 
@@ -234,7 +235,7 @@ class BusHelper extends BaseApiHelper {
         'operation': '全部',
         'page': 1,
         'start': 0,
-        'limit': 90,
+        'limit': Constants.busTimeTablePageSize,
       };
       options = Options(contentType: Headers.formUrlEncodedContentType);
     } else {
@@ -249,11 +250,11 @@ class BusHelper extends BaseApiHelper {
           'operation': '全部',
           'page': 1,
           'start': 0,
-          'limit': 90,
+          'limit': Constants.busTimeTablePageSize,
         },
       );
       options = buildCacheOptions(
-        const Duration(seconds: 60),
+        Constants.defaultCacheDuration,
         primaryKey: userTimeTableSelectCacheKey,
       );
     }
@@ -353,7 +354,7 @@ class BusHelper extends BaseApiHelper {
       requestData = <String, dynamic>{
         'page': 1,
         'start': 0,
-        'limit': 90,
+        'limit': Constants.busTimeTablePageSize,
       };
       options = Options(contentType: Headers.formUrlEncodedContentType);
     } else {
@@ -361,10 +362,10 @@ class BusHelper extends BaseApiHelper {
       requestData = formUrlEncoded(<String, dynamic>{
         'page': 1,
         'start': 0,
-        'limit': 90,
+        'limit': Constants.busTimeTablePageSize,
       });
       options = buildCacheOptions(
-        const Duration(seconds: 60),
+        Constants.defaultCacheDuration,
         primaryKey: userRecordsCacheKey,
       );
     }
@@ -403,7 +404,7 @@ class BusHelper extends BaseApiHelper {
       requestData = <String, int>{
         'page': 1,
         'start': 0,
-        'limit': 200,
+        'limit': Constants.busViolationPageSize,
       };
       options = Options(contentType: Headers.formUrlEncodedContentType);
     } else {
@@ -411,10 +412,10 @@ class BusHelper extends BaseApiHelper {
       requestData = formUrlEncoded(<String, int>{
         'page': 1,
         'start': 0,
-        'limit': 200,
+        'limit': Constants.busViolationPageSize,
       });
       options = buildCacheOptions(
-        const Duration(seconds: 60),
+        Constants.defaultCacheDuration,
         primaryKey: userViolationRecordsCacheKey,
       );
     }

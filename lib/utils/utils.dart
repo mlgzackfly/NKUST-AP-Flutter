@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:ap_common/ap_common.dart';
 import 'package:flutter/material.dart';
-// import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image/image.dart' as image_utils;
 import 'package:nkust_ap/config/constants.dart';
 import 'package:nkust_ap/models/bus_reservations_data.dart';

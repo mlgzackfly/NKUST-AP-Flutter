@@ -28,7 +28,7 @@ class LeaveNkustPage extends StatefulWidget {
 class _LeaveNkustPageState extends State<LeaveNkustPage> {
   late AppLocalizations app;
 
-  late InAppWebViewController webViewController;
+  InAppWebViewController? _webViewController;
 
   bool finish = false;
 
@@ -55,10 +55,7 @@ class _LeaveNkustPageState extends State<LeaveNkustPage> {
       floatingActionButton: kDebugMode
           ? FloatingActionButton(
               child: const Icon(Icons.done_outline),
-              onPressed: () {
-                // final html = await webViewController.getHtml();
-                // debugPrint(html);
-              },
+              onPressed: () {},
             )
           : null,
       body: InAppWebView(
@@ -70,7 +67,7 @@ class _LeaveNkustPageState extends State<LeaveNkustPage> {
           userAgent: MobileNkustHelper.instance.userAgent,
         ),
         onWebViewCreated: (InAppWebViewController webViewController) {
-          this.webViewController = webViewController;
+          _webViewController = webViewController;
           UiUtil.instance.showToast(context, app.mobileNkustLoginHint);
         },
         onJsPrompt: (
@@ -82,9 +79,6 @@ class _LeaveNkustPageState extends State<LeaveNkustPage> {
         onPageCommitVisible:
             (InAppWebViewController controller, Uri? title) async {
           await controller.getUrl();
-          // await webViewController.evaluateJavascript(
-          //     source:
-          //         r'$.getScript("https://cdnjs.cloudflare.com/ajax/libs/vConsole/3.4.0/vconsole.min.js", function() {var vConsole = new VConsole();});');
         },
         onTitleChanged:
             (InAppWebViewController controller, String? title) async {
@@ -96,11 +90,11 @@ class _LeaveNkustPageState extends State<LeaveNkustPage> {
         onLoadStop: (InAppWebViewController controller, Uri? title) async {
           final Uri? uri = await controller.getUrl();
           if (uri.toString() == LeaveHelper.basePath) {
-            await webViewController.evaluateJavascript(
+            await _webViewController?.evaluateJavascript(
               source: 'document.getElementsByName("Login1\$UserName")[0].value'
                   ' = "${widget.username}";',
             );
-            await webViewController.evaluateJavascript(
+            await _webViewController?.evaluateJavascript(
               source: 'document.getElementsByName("Login1\$Password")[0].value'
                   ' = "${widget.password}";',
             );

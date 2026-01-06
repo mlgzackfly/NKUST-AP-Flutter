@@ -131,13 +131,4 @@ class BusReservation {
   String getEnd(AppLocalizations? local) {
     return Utils.parserCampus(local, end);
   }
-
-//  bool canCancel() {
-//    var now = new DateTime.now();
-//    initializeDateFormatting();
-//    var formatter = new DateFormat('yyyy/MM/ddTHH:mm:ssZ');
-//    var endEnrollDateTime = formatter.parse(this.endTime);
-//    return now.millisecondsSinceEpoch <
-//        endEnrollDateTime.millisecondsSinceEpoch;
-//  }
 }

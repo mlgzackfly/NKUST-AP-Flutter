@@ -245,7 +245,6 @@ class MobileNkustHelper extends BaseApiHelper with CookieManageable {
     }
 
     final dynamic rawHtml = response.data;
-    // if (kDebugMode) debugPrint(rawHtml);
     final CourseData courseData = MobileNkustParser.courseTable(rawHtml);
     return courseData;
   }
@@ -269,7 +268,6 @@ class MobileNkustHelper extends BaseApiHelper with CookieManageable {
     }
 
     final dynamic rawHtml = response.data;
-    // if (kDebugMode) debugPrint(rawHtml);
     final MidtermAlertsData midtermAlertsData =
         MobileNkustParser.midtermAlerts(rawHtml);
     return midtermAlertsData;
@@ -294,7 +292,6 @@ class MobileNkustHelper extends BaseApiHelper with CookieManageable {
     }
 
     final dynamic rawHtml = response.data;
-    // if (kDebugMode) debugPrint(rawHtml);
     final ScoreData courseData = MobileNkustParser.scores(rawHtml);
     return courseData;
   }
@@ -305,7 +302,6 @@ class MobileNkustHelper extends BaseApiHelper with CookieManageable {
       firstRequestHeader: <String, String>{'Referer': homeUrl},
     );
     final dynamic rawHtml = response.data;
-    // if (kDebugMode) debugPrint(rawHtml);
     final UserInfo data = MobileNkustParser.userInfo(rawHtml);
     return data;
   }
@@ -463,7 +459,7 @@ class MobileNkustHelper extends BaseApiHelper with CookieManageable {
           'beginStation': requestData[0],
           'endStation': requestData[1],
           'pageNum': 1,
-          'pageSize': 99,
+          'pageSize': Constants.mobilePageSize,
           '__RequestVerificationToken': MobileNkustParser.getCSRF(request.data),
         },
         options: Options(

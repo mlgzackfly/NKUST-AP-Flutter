@@ -72,25 +72,6 @@ class LeaveHelper extends BaseApiHelper with CookieManageable {
     required String password,
     bool clearCache = false,
   }) async {
-    // final data = MobileCookiesData.load();
-    // if (data != null && !clearCache) {
-    //   MobileNkustHelper.instance.setCookieFromData(data);
-    //   final isCookieAlive = await MobileNkustHelper.instance.isCookieAlive();
-    //   if (isCookieAlive) {
-    //     final now = DateTime.now();
-    //     final lastTime = PreferenceUtil.instance.getInt(
-    //       Constants.MOBILE_COOKIES_LAST_TIME,
-    //       now.microsecondsSinceEpoch,
-    //     );
-    //     AnalyticsUtil.analytics.logEvent(
-    //       name: 'cookies_persistence_time',
-    //       parameters: {
-    //         'time': now.microsecondsSinceEpoch - lastTime,
-    //       },
-    //     );
-    //     return LoginResponse();
-    //   }
-    // }
     final bool? result = await Navigator.push<bool>(
       context,
       MaterialPageRoute<bool>(

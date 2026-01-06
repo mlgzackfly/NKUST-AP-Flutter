@@ -28,7 +28,7 @@ class MobileNkustPage extends StatefulWidget {
 class _MobileNkustPageState extends State<MobileNkustPage> {
   late AppLocalizations app;
 
-  late InAppWebViewController webViewController;
+  InAppWebViewController? _webViewController;
 
   bool finish = false;
 
@@ -56,8 +56,6 @@ class _MobileNkustPageState extends State<MobileNkustPage> {
           ? FloatingActionButton(
               child: const Icon(Icons.done_outline),
               onPressed: () {
-                // final html = await webViewController.getHtml();
-                // debugPrint(html);
                 MobileNkustHelper.instance.getScores();
               },
             )
@@ -71,7 +69,7 @@ class _MobileNkustPageState extends State<MobileNkustPage> {
           userAgent: MobileNkustHelper.instance.userAgent,
         ),
         onWebViewCreated: (InAppWebViewController webViewController) {
-          this.webViewController = webViewController;
+          _webViewController = webViewController;
           UiUtil.instance.showToast(context, app.mobileNkustLoginHint);
         },
         onJsPrompt: (
@@ -83,19 +81,16 @@ class _MobileNkustPageState extends State<MobileNkustPage> {
         onPageCommitVisible:
             (InAppWebViewController controller, Uri? title) async {
           final Uri? uri = await controller.getUrl();
-          // await webViewController.evaluateJavascript(
-          //     source:
-          //         r'$.getScript("https://cdnjs.cloudflare.com/ajax/libs/vConsole/3.4.0/vconsole.min.js", function() {var vConsole = new VConsole();});');
           if (uri.toString() == MobileNkustHelper.loginUrl) {
-            await webViewController.evaluateJavascript(
+            await _webViewController?.evaluateJavascript(
               source: 'document.getElementsByName("Account")[0].value '
                   '= "${widget.username}";',
             );
-            await webViewController.evaluateJavascript(
+            await _webViewController?.evaluateJavascript(
               source: 'document.getElementsByName("Password")[0].value'
                   ' = "${widget.password}";',
             );
-            await webViewController.evaluateJavascript(
+            await _webViewController?.evaluateJavascript(
               source: 'document.getElementsByName("RememberMe")[0].checked '
                   '= true;',
             );
