@@ -88,9 +88,6 @@ class WebApHelper extends BaseApiHelper {
           bodyBytes: (await getValidationImage())!,
         );
 
-        if (kDebugMode) {
-          debugPrint('Login attempt with captcha: $captchaCode');
-        }
         final Response<dynamic> res = await dio.post(
           ApiEndpoints.getWebApUrl(ApiEndpoints.webApLogin),
           data: <String, String>{

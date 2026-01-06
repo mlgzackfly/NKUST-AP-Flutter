@@ -83,7 +83,6 @@ class _MobileNkustPageState extends State<MobileNkustPage> {
         onPageCommitVisible:
             (InAppWebViewController controller, Uri? title) async {
           final Uri? uri = await controller.getUrl();
-          debugPrint('onPageCommitVisible $title $uri');
           // await webViewController.evaluateJavascript(
           //     source:
           //         r'$.getScript("https://cdnjs.cloudflare.com/ajax/libs/vConsole/3.4.0/vconsole.min.js", function() {var vConsole = new VConsole();});');
@@ -105,15 +104,11 @@ class _MobileNkustPageState extends State<MobileNkustPage> {
         onTitleChanged:
             (InAppWebViewController controller, String? title) async {
           final Uri? uri = await controller.getUrl();
-          debugPrint('onTitleChanged $title $uri');
           if (uri.toString() == MobileNkustHelper.homeUrl) {
             _finishLogin();
           }
         },
-        onLoadStop: (InAppWebViewController controller, Uri? title) async {
-          final Uri? uri = await controller.getUrl();
-          debugPrint('onLoadStop $title $uri');
-        },
+        onLoadStop: (InAppWebViewController controller, Uri? title) {},
       ),
     );
   }

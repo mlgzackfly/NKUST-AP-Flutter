@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:ap_common/ap_common.dart';
 import 'package:ap_common_firebase/ap_common_firebase.dart';
@@ -745,11 +744,4 @@ class WebApParser {
 
     return data;
   }
-}
-
-void main() {
-  File('file.txt').readAsString().then((String contents) {
-    // ignore: avoid_print
-    print(WebApParser.instance.apLoginParser(contents));
-  });
 }
