@@ -62,7 +62,7 @@ class LeaveRecordPageState extends State<LeaveRecordPage>
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.search),
         onPressed: () {
-          key.currentState!.pickSemester();
+          key.currentState?.pickSemester();
         },
       ),
       body: SizedBox(
@@ -148,7 +148,7 @@ class LeaveRecordPageState extends State<LeaveRecordPage>
         return InkWell(
           onTap: () {
             if (state == PageState.empty || state == PageState.offlineEmpty) {
-              key.currentState!.pickSemester();
+              key.currentState?.pickSemester();
             } else {
               _getSemesterLeaveRecord();
             }

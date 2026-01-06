@@ -194,7 +194,9 @@ class HomePageState extends State<HomePage> {
                   );
                   AnnouncementHelper.instance.fcmToken = token;
                 }
-              } catch (_) {}
+              } catch (e, s) {
+                CrashlyticsUtil.instance.recordError(e, s);
+              }
             }
           },
         ),
@@ -636,8 +638,8 @@ class HomePageState extends State<HomePage> {
         },
         onFailure: (DioException e) {
           if (isLogin) return;
-          final String text = e.i18nMessage!;
-          _homeKey.currentState!.showSnackBar(
+          final String text = e.i18nMessage ?? ap.somethingError;
+          _homeKey.currentState?.showSnackBar(
             text: text,
             actionText: ap.retry,
             onSnackBarTapped: _login,
@@ -665,7 +667,7 @@ class HomePageState extends State<HomePage> {
               default:
                 message = ap.somethingError;
             }
-            _homeKey.currentState!.showSnackBar(
+            _homeKey.currentState?.showSnackBar(
               text: message,
               actionText: ap.retry,
               onSnackBarTapped: _login,
@@ -693,7 +695,7 @@ class HomePageState extends State<HomePage> {
     if (state != HomeState.finish) {
       _getAnnouncements();
     }
-    _homeKey.currentState!.showBasicHint(text: ap.loginSuccess);
+    _homeKey.currentState?.showBasicHint(text: ap.loginSuccess);
   }
 
   Future<void> openLoginPage() async {
@@ -712,17 +714,16 @@ class HomePageState extends State<HomePage> {
   Future<void> checkLogin() async {
     await Future<void>.delayed(const Duration(microseconds: 30));
     if (isLogin) {
-      _homeKey.currentState!.hideSnackBar();
+      _homeKey.currentState?.hideSnackBar();
     } else {
       if (!mounted) return;
-      _homeKey.currentState!
-          .showSnackBar(
-            text: ApLocalizations.of(context).notLogin,
-            actionText: ApLocalizations.of(context).login,
-            onSnackBarTapped: openLoginPage,
-          )!
-          .closed
-          .then(
+      final ScaffoldFeatureController<SnackBar, SnackBarClosedReason>?
+          controller = _homeKey.currentState?.showSnackBar(
+        text: ApLocalizations.of(context).notLogin,
+        actionText: ApLocalizations.of(context).login,
+        onSnackBarTapped: openLoginPage,
+      );
+      controller?.closed.then(
         (SnackBarClosedReason reason) {
           checkLogin();
         },

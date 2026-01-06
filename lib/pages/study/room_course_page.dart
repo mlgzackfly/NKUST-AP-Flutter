@@ -56,7 +56,7 @@ class _EmptyRoomPageState extends State<EmptyRoomPage> {
             selectSemester = semester;
             state = CourseState.loading;
           });
-          semesterData = key.currentState!.semesterData;
+          semesterData = key.currentState?.semesterData;
           _getRoomCourseTable();
         },
       ),
@@ -64,7 +64,7 @@ class _EmptyRoomPageState extends State<EmptyRoomPage> {
         _getRoomCourseTable();
       },
       onSearchButtonClick: () {
-        key.currentState!.pickSemester();
+        key.currentState?.pickSemester();
       },
     );
   }

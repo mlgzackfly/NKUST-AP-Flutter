@@ -632,7 +632,7 @@ class LeaveApplyPageState extends State<LeaveApplyPage>
       UiUtil.instance.showToast(context, ap.pleasePickDateAndSection);
     } else if (leaveSubmitInfo.tutor == null && teacher == null) {
       UiUtil.instance.showToast(context, ap.pickTeacher);
-    } else if (_formKey.currentState!.validate()) {
+    } else if (_formKey.currentState?.validate() ?? false) {
       String tutorId;
       String tutorName;
       if (leaveSubmitInfo.tutor == null) {

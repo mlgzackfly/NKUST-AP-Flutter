@@ -65,7 +65,7 @@ class CoursePageState extends State<CoursePage> {
             selectSemester = semester;
             state = CourseState.loading;
           });
-          semesterData = key.currentState!.semesterData;
+          semesterData = key.currentState?.semesterData;
           notifyData = CourseNotifyData.load(courseNotifyCacheKey);
           _loadCacheData(semester.code);
           if (!PreferenceUtil.instance
@@ -80,7 +80,7 @@ class CoursePageState extends State<CoursePage> {
         return null;
       },
       onSearchButtonClick: () {
-        key.currentState!.pickSemester();
+        key.currentState?.pickSemester();
       },
     );
   }

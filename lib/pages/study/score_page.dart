@@ -66,7 +66,7 @@ class ScorePageState extends State<ScorePage> {
         return null;
       },
       onSearchButtonClick: () {
-        key.currentState!.pickSemester();
+        key.currentState?.pickSemester();
       },
       details: <String>[
         '${ap.conductScore}：${scoreData?.detail.conduct ?? ''}',

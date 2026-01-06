@@ -52,7 +52,7 @@ class _MidtermAlertsPageState extends State<MidtermAlertsPage> {
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.search),
         onPressed: () {
-          key.currentState!.pickSemester();
+          key.currentState?.pickSemester();
         },
       ),
       body: Flex(
@@ -141,7 +141,7 @@ class _MidtermAlertsPageState extends State<MidtermAlertsPage> {
         return InkWell(
           onTap: () {
             if (state == PageState.empty) {
-              key.currentState!.pickSemester();
+              key.currentState?.pickSemester();
             } else {
               _getMidtermAlertsData();
             }
